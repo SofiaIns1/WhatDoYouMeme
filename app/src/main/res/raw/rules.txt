@@ -1,0 +1,9 @@
+Each round a player will be selected as a judge.
+
+The judge is given a choice of "memes" cards and must choose one.
+
+All remaining players will play one of their "caption" cards that best fits the "meme".
+
+You gain points if yor card is chosen by the judge.
+
+At the end, the player with the most points wins.
