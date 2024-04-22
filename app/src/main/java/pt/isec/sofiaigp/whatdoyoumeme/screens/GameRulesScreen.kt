@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import pt.isec.sofiaigp.whatdoyoumeme.R
+import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.DarkBlue
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -52,7 +53,7 @@ fun GameRulesScreen(context: Context, navController: NavHostController) {
             modifier = Modifier
                 .clip(RoundedCornerShape(size = 30.dp))
                 .fillMaxSize()
-                .background(Color(0xFF2B2168))
+                .background(DarkBlue)
                 .padding(horizontal = 24.dp)
                 .padding(top = 34.dp)
         ) {

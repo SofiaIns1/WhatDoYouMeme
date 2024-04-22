@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import pt.isec.sofiaigp.whatdoyoumeme.screens.CreateGameScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.FindGameScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.GameRulesScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.HomePageScreen
 
@@ -18,5 +19,6 @@ fun NavigationGraph(navController: NavHostController) {
         composable("Home Screen") { HomePageScreen(navController) }
         composable("Create Game") { CreateGameScreen(navController) }
         composable("Game Rules") { GameRulesScreen(context, navController) }
+        composable("Find Game") { FindGameScreen(navController) }
     }
 }

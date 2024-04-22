@@ -65,7 +65,7 @@ fun GoBackBarWhite(navController: NavHostController){
         colors = TopAppBarDefaults.topAppBarColors(Color.Transparent),
         navigationIcon = {
             IconButton(
-                onClick = { },
+                onClick = { navController.navigateUp() },
                 modifier = Modifier.size(40.dp)
             ) {
                 Icon(

@@ -32,6 +32,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import pt.isec.sofiaigp.whatdoyoumeme.R
 import pt.isec.sofiaigp.whatdoyoumeme.components.InputField
+import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.DarkLilac
+import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.Lilac
 
 @Composable
 fun HomePageScreen(navController: NavHostController) {
@@ -67,7 +69,7 @@ fun HomePageScreen(navController: NavHostController) {
                 Text(
                     text = "USERNAME",
                     fontSize = 30.sp,
-                    color = Color(0xFF8175C1),
+                    color = Lilac,
                     fontWeight = FontWeight.Bold,
                 )
                 InputField(
@@ -79,13 +81,13 @@ fun HomePageScreen(navController: NavHostController) {
 
                 Button(
                     onClick = {
-
+                        navController.navigate("Find Game")
                     },
                     modifier = Modifier
                         .height(65.dp)
                         .fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF8175C1),
+                        containerColor = Lilac,
                         contentColor = Color.White
                     )
                 ) {
@@ -102,12 +104,12 @@ fun HomePageScreen(navController: NavHostController) {
                         navController.navigate("Create Game")
                     },
                     modifier = Modifier
-                        .border(BorderStroke(1.dp, Color(0xFF8175C1)), RoundedCornerShape(30.dp))
+                        .border(BorderStroke(1.dp, Lilac), RoundedCornerShape(30.dp))
                         .height(65.dp)
                         .fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.White,
-                        contentColor = Color(0xFF53479E)
+                        contentColor = DarkLilac
                     )
 
                 ) {
@@ -127,7 +129,7 @@ fun HomePageScreen(navController: NavHostController) {
                         .height(65.dp)
                         .fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF8175C1),
+                        containerColor = Lilac,
                         contentColor = Color.White
                     )
                 ) {

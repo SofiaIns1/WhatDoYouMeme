@@ -1,6 +1,8 @@
 package pt.isec.sofiaigp.whatdoyoumeme.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,6 +30,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +51,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pt.isec.sofiaigp.whatdoyoumeme.R
+import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.DarkLilac
+import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.Lilac
 
 @Composable
 fun InputField(value: String, onValueChange: (String) -> Unit, placeholder: String) {
@@ -59,12 +65,14 @@ fun InputField(value: String, onValueChange: (String) -> Unit, placeholder: Stri
                 text = placeholder,
                 style = MaterialTheme.typography.bodyLarge,
                 fontSize = 20.sp,
-                color = Color(0xFF53479E),
+                color = DarkLilac,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
             )
         },
         textStyle = TextStyle(textAlign = TextAlign.Center),
         shape = RoundedCornerShape(30.dp),
-        colors = OutlinedTextFieldDefaults.colors(Color(0xFF8175C1)),
+        colors = OutlinedTextFieldDefaults.colors(Lilac),
         modifier = Modifier
             .height(65.dp)
             .fillMaxWidth()
@@ -84,7 +92,7 @@ fun StepperInputField(value: Int, onValueChange: (Int) -> Unit, placeholder: Int
                 text = placeholder.toString(),
                 style = MaterialTheme.typography.bodyLarge,
                 fontSize = 20.sp,
-                color = Color(0xFF53479E),
+                color = DarkLilac,
             )
 
 
@@ -92,10 +100,10 @@ fun StepperInputField(value: Int, onValueChange: (Int) -> Unit, placeholder: Int
         textStyle = TextStyle(
             textAlign = TextAlign.Center,
             fontSize = 30.sp,
-            color = Color(0xFF53479E)
+            color = DarkLilac,
         ),
         shape = RoundedCornerShape(30.dp),
-        colors = OutlinedTextFieldDefaults.colors(Color(0xFF8175C1)),
+        colors = OutlinedTextFieldDefaults.colors(Lilac),
         modifier = Modifier
             .height(65.dp)
             .fillMaxWidth(),
@@ -137,3 +145,49 @@ fun StepperInputField(value: Int, onValueChange: (Int) -> Unit, placeholder: Int
     )
 }
 
+@Composable
+fun SearchInputField(value: String, onValueChange: (String) -> Unit, placeholder: String) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        shape = RoundedCornerShape(30.dp),
+
+        modifier = Modifier
+            .height(65.dp)
+            .fillMaxWidth()
+            .background(Color.White, RoundedCornerShape(30.dp)),
+
+        placeholder = {
+            Text(
+                text = placeholder,
+                style = MaterialTheme.typography.bodyLarge,
+                fontSize = 20.sp,
+                color = DarkLilac,
+            )
+
+
+        },
+        textStyle = TextStyle(
+            textAlign = TextAlign.Center,
+            fontSize = 30.sp,
+            color = DarkLilac,
+        ),
+        colors = OutlinedTextFieldDefaults.colors(Lilac),
+
+        leadingIcon = {
+            IconButton(
+                onClick = {
+                    //onValueChange
+                    /*TODO*/
+                },
+                modifier = Modifier.size(75.dp)
+            ) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.search),
+                    tint = Color.Unspecified,
+                    contentDescription = "Decrement",
+                )
+            }
+        },
+    )
+}
