@@ -32,9 +32,10 @@ import pt.isec.sofiaigp.whatdoyoumeme.R
 import pt.isec.sofiaigp.whatdoyoumeme.components.GoBackBar
 import pt.isec.sofiaigp.whatdoyoumeme.components.InputField
 import pt.isec.sofiaigp.whatdoyoumeme.components.StepperInputField
+import pt.isec.sofiaigp.whatdoyoumeme.data.GameViewModel
 
 @Composable
-fun CreateGameScreen(navController: NavHostController) {
+fun CreateGameScreen(navController: NavHostController, viewModel: GameViewModel, userName: String) {
 
     var gameRoomName by remember { mutableStateOf("") }
     var numPlayers by remember { mutableIntStateOf(0) }
@@ -57,79 +58,80 @@ fun CreateGameScreen(navController: NavHostController) {
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "WDYM logo",
                 modifier = Modifier
-                    .size(280.dp)
+                    .size(230.dp)
             )
-            Column(
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
+        }
+
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 60.dp)
+        ) {
+            Text(
+                text = "ROOM NAME",
+                fontSize = 27.sp,
+                color = Color(0xFF8175C1),
+                fontWeight = FontWeight.Bold,
+            )
+            InputField(
+                value = gameRoomName,
+                onValueChange = { gameRoomName = it },
+                placeholder = "RoomNameHere"
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                text = "NUMBER OF PLAYERS",
+                fontSize = 23.sp,
+                color = Color(0xFF8175C1),
+                fontWeight = FontWeight.Bold
+            )
+            StepperInputField(
+                value = numPlayers,
+                onValueChange = { numPlayers = it },
+                placeholder = 0
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                text = "ROUNDS",
+                fontSize = 23.sp,
+                color = Color(0xFF8175C1),
+                fontWeight = FontWeight.Bold
+            )
+            StepperInputField(
+                value = numRounds,
+                onValueChange = { numRounds = it },
+                placeholder = 0
+            )
+
+            Spacer(modifier = Modifier.height(30.dp))
+
+            Button(
+                onClick = {
+                    viewModel.createGameRoom(gameRoomName, numPlayers, numRounds, userName)
+                },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 60.dp)
+                    .height(65.dp)
+                    .fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF8175C1),
+                    contentColor = Color.White
+                )
             ) {
                 Text(
-                    text = "ROOM NAME",
-                    fontSize = 27.sp,
-                    color = Color(0xFF8175C1),
+                    text = "CREATE",
+                    fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
                 )
-                InputField(
-                    value = gameRoomName,
-                    onValueChange = { gameRoomName = it },
-                    placeholder = "RoomNameHere"
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Text(
-                    text = "NUMBER OF PLAYERS",
-                    fontSize = 23.sp,
-                    color = Color(0xFF8175C1),
-                    fontWeight = FontWeight.Bold
-                )
-                StepperInputField(
-                    value = numPlayers,
-                    onValueChange = { numPlayers = it },
-                    placeholder = 0
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Text(
-                    text = "ROUNDS",
-                    fontSize = 23.sp,
-                    color = Color(0xFF8175C1),
-                    fontWeight = FontWeight.Bold
-                )
-                StepperInputField(
-                    value = numRounds,
-                    onValueChange = { numRounds = it },
-                    placeholder = 0
-                )
-
-                Spacer(modifier = Modifier.height(50.dp))
-
-                Button(
-                    onClick = {
-
-                    },
-                    modifier = Modifier
-                        .height(65.dp)
-                        .fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF8175C1),
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text(
-                        text = "CREATE",
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-
-                }
-
 
             }
+
+
         }
     }
 }
@@ -137,6 +139,6 @@ fun CreateGameScreen(navController: NavHostController) {
 
 @Preview(showBackground = true)
 @Composable
-fun CreateGameScreenPreview(){
-    CreateGameScreen(rememberNavController())
+fun CreateGameScreenPreview() {
+    //CreateGameScreen(rememberNavController())
 }
