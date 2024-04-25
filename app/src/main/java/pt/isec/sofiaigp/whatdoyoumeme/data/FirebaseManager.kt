@@ -8,7 +8,7 @@ class FirebaseManager() {
 
     private val db = FirebaseFirestore.getInstance()
 
-    fun createPlayer(playerName: String, score: Int = 0) {
+    fun createPlayer(playerName: String, score: Int? = 0, onSuccess: () -> Unit, onFailure: () -> Unit) {
 
         db.collection("players")
             .whereEqualTo("playerName", playerName)
@@ -24,12 +24,14 @@ class FirebaseManager() {
                         .add(playerData)
                         .addOnSuccessListener { documentReference ->
                             Log.d("TAG", "Player added with ID: ${documentReference.id}")
+                            onSuccess()
                         }
                         .addOnFailureListener { exception ->
                             Log.d("TAG", "Error adding player", exception)
                         }
                 } else {
                     Log.d("TAG", "Player with name $playerName already exists.")
+                    onFailure()
                 }
             }
             .addOnFailureListener { exception ->

@@ -97,8 +97,19 @@ fun HomePageScreen(navController: NavHostController, viewModel: GameViewModel) {
             Button(
                 onClick = {
                     if (isValidInput()) {
-                        viewModel.createPlayer(userName)
-                        navController.navigate("Find Game/${userName}")
+                        viewModel.createPlayer(userName, onSuccess = {
+                            navController.navigate("Find Game/${userName}")
+                        },
+                            onFailure = {
+                                Toast.makeText(
+                                    context,
+                                    "Username already exists",
+                                    Toast.LENGTH_SHORT
+                                )
+                                    .show()
+                            }
+                        )
+
                     }
 
                 },
@@ -121,8 +132,19 @@ fun HomePageScreen(navController: NavHostController, viewModel: GameViewModel) {
             Button(
                 onClick = {
                     if (isValidInput()) {
-                        viewModel.createPlayer(userName)
-                        navController.navigate("Create Game/${userName}")
+                        viewModel.createPlayer(userName, onSuccess = {
+                            navController.navigate("Create Game/${userName}")
+
+                        },
+                            onFailure = {
+                                Toast.makeText(
+                                    context,
+                                    "Username already exists",
+                                    Toast.LENGTH_SHORT
+                                )
+                                    .show()
+                            })
+
                     }
 
                 },

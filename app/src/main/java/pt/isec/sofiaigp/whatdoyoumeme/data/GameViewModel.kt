@@ -20,8 +20,10 @@ class GameViewModel() : ViewModel() {
         }
     }
 
-    fun createPlayer(playerName: String) {
-        firebaseManager.createPlayer(playerName)
+    fun createPlayer(playerName: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
+        firebaseManager.createPlayer(playerName = playerName, onSuccess = onSuccess, onFailure = onFailure)
+
+
     }
 
     fun createGameRoom(roomName: String, numPlayers: Int, numRounds: Int, playerName: String) {
