@@ -1,6 +1,5 @@
 package pt.isec.sofiaigp.whatdoyoumeme.utils
 
-import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
@@ -30,14 +29,13 @@ fun NavigationGraph(navController: NavHostController, viewModel: GameViewModel) 
             val userName = backStackEntry.arguments?.getString("userName") ?: ""
             FindGameScreen(navController, viewModel, userName)
         }
-        composable("Waiting Room/{roomName}"){backStackEntry ->
-            val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
-            WaitingRoomScreenTTTTT(viewModel, roomName)
-        }
         composable("Waiting Room/{roomName}") {backStackEntry ->
             val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
             WaitingRoomScreen(navController, roomName, viewModel)
         }
-        composable("Winner Screen") { WinnerScreen(navController, viewModel) }
+        composable("Winner Screen/{roomName}") {backStackEntry ->
+            val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
+            WinnerScreen(navController, viewModel, roomName)
+        }
     }
 }

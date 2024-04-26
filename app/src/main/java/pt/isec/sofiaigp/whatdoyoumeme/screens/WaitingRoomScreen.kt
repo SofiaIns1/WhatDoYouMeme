@@ -16,6 +16,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,17 +28,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import pt.isec.sofiaigp.whatdoyoumeme.R
 import pt.isec.sofiaigp.whatdoyoumeme.components.GoBackBarWhite
-import pt.isec.sofiaigp.whatdoyoumeme.data.GameRoom
 import pt.isec.sofiaigp.whatdoyoumeme.data.GameViewModel
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.DarkBlue
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.Lilac
 
 @Composable
 fun WaitingRoomScreen(navController: NavHostController, roomName: String, viewModel: GameViewModel) {
-    Log.i("Waiting Room", roomName)
-    val gameRoom = GameRoom(roomName = "test", players = listOf("Sofia", "Maria", "Dani"), maxPlayers = 3, currentNumPlayers = 3)
-    //val gameRoom = viewModel.getRoomById(roomId)/*TODO*/
-    val aux = if(gameRoom.maxPlayers!! <= 4){
+    val gameRoom = viewModel.getGameRoomByName(roomName).observeAsState()
+    val aux = if(gameRoom.value?.maxPlayers != null && gameRoom.value?.maxPlayers!! <= 4){
         2
     } else{
         3
@@ -80,12 +78,12 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, viewMo
                 horizontalAlignment = Alignment.CenterHorizontally
             ){
                 Text(
-                    text = "ROOM: " + gameRoom.roomName,
+                    text = "ROOM: " + gameRoom.value?.roomName,
                     color = Lilac,
                     fontSize = 24.sp
                 )
                 Text(
-                    text = "PLAYERS: " + gameRoom.currentNumPlayers.toString() + "/" + gameRoom.maxPlayers,
+                    text = "PLAYERS: " + gameRoom.value?.players?.size.toString() + "/" + gameRoom.value?.maxPlayers,
                     color = Lilac,
                     fontSize = 24.sp
                 )
@@ -102,7 +100,7 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, viewMo
             ) {
                 Row{
                     for(i in 0..<aux){
-                        if(i < gameRoom.currentNumPlayers!!){
+                        if(gameRoom.value?.players?.size != null && i < gameRoom.value?.players?.size!!){
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center,
@@ -112,7 +110,7 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, viewMo
                                     contentDescription = "Player",
                                     tint = Lilac
                                 )
-                                gameRoom.players?.get(i)?.let {
+                                gameRoom.value?.players?.get(i)?.let {
                                     Text(
                                         text = it, /*TODO search player DB to get the user name instead of its id*/
                                         fontSize = 20.sp,
@@ -137,61 +135,66 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, viewMo
                 Spacer(modifier = Modifier.height(15.dp))
 
                 Row{
-                    for(i in aux..<gameRoom.maxPlayers){
-                        if(i < gameRoom.currentNumPlayers!!){
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center,
-                            ){
-                                Icon(
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.user),
-                                    contentDescription = "Player",
-                                    tint = Lilac
-                                )
-                                gameRoom.players?.get(i)?.let {
-                                    Text(
-                                        text = it,/*TODO search player DB to get the user name instead of its id*/
-                                        fontSize = 20.sp,
-                                        color = Lilac
+                    if(gameRoom.value?.maxPlayers != null && gameRoom.value?.players?.size != null){
+                        for(i in aux..<gameRoom.value?.maxPlayers!!){
+                            if(i < gameRoom.value?.players?.size!!){
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center,
+                                ){
+                                    Icon(
+                                        imageVector = ImageVector.vectorResource(id = R.drawable.user),
+                                        contentDescription = "Player",
+                                        tint = Lilac
                                     )
+                                    gameRoom.value?.players?.get(i)?.let {
+                                        Text(
+                                            text = it,/*TODO search player DB to get the user name instead of its id*/
+                                            fontSize = 20.sp,
+                                            color = Lilac
+                                        )
+                                    }
                                 }
-                            }
 
-                        }
-                        else{
-                            Icon(
-                                imageVector = ImageVector.vectorResource(id = R.drawable.waiting),
-                                contentDescription = "Wait",
-                                tint = Color.White
-                            )
-                        }
-                        if(i < gameRoom.maxPlayers - 1){
-                            Spacer(modifier = Modifier.width(10.dp))
+                            }
+                            else{
+                                Icon(
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.waiting),
+                                    contentDescription = "Wait",
+                                    tint = Color.White
+                                )
+                            }
+                            if(i < gameRoom.value?.maxPlayers!! - 1){
+                                Spacer(modifier = Modifier.width(10.dp))
+                            }
                         }
                     }
-                }
-                
-                if(gameRoom.currentNumPlayers == gameRoom.maxPlayers){
-                    Spacer(modifier = Modifier.height(25.dp))
 
-                    Button(
-                        onClick = {
-                            navController.navigate("Winner Screen")
-                            /*TODO Go to player screen*/
-                        },
-                        modifier = Modifier
-                            .height(65.dp)
-                            .fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Lilac,
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Text(
-                            text = "START GAME",
-                            fontSize = 30.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
+                }
+
+
+                if(gameRoom.value?.maxPlayers != null && gameRoom.value?.players?.size != null) {
+                    if (gameRoom.value?.players?.size == gameRoom.value?.maxPlayers) {
+                        Spacer(modifier = Modifier.height(25.dp))
+
+                        Button(
+                            onClick = {
+                                /*TODO Go to player screen*/
+                            },
+                            modifier = Modifier
+                                .height(65.dp)
+                                .fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Lilac,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text(
+                                text = "START GAME",
+                                fontSize = 30.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                     }
                 }
             }

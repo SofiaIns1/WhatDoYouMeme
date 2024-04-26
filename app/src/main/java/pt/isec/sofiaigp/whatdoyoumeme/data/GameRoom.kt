@@ -7,7 +7,7 @@ data class GameRoom(
     val maxPlayers: Int? = null,
     var currentNumPlayers: Int? = null,
     val numRounds: Int? = null,
-    val winner: String? = null
+    var winner: String? = null
     //val currentGameState: GameState
 )
 

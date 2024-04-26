@@ -72,4 +72,5 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation("androidx.compose.runtime:runtime-livedata:1.6.6")
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.6")
 }
