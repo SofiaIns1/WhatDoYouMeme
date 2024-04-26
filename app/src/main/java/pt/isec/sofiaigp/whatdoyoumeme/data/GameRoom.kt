@@ -6,16 +6,10 @@ data class GameRoom(
     val players: List<String>? = null, //ids of the players in the room
     val maxPlayers: Int? = null,
     var currentNumPlayers: Int? = null,
-    val numRounds: Int? = null
+    val numRounds: Int? = null,
+    val winner: String? = null
     //val currentGameState: GameState
 )
-
-
-//data class GameRoom(
-//    var name : String ?= null,
-//    var players : Int ?= 0,
-//    var maxPlayers : Int ?= 0
-//)
 
 data class GameState(
     val score: Int,
@@ -23,5 +17,3 @@ data class GameState(
     val remainingTime: Long,
     val currentRound: Int
 )
-
-

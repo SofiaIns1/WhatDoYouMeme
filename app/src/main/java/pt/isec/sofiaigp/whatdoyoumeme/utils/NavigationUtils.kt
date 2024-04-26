@@ -12,13 +12,14 @@ import pt.isec.sofiaigp.whatdoyoumeme.screens.FindGameScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.GameRulesScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.HomePageScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.WaitingRoomScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.WinnerScreen
 
 
 @Composable
 fun NavigationGraph(navController: NavHostController, viewModel: GameViewModel) {
     val context = LocalContext.current
 
-    NavHost(navController = navController, startDestination = "Home Screen") {
+    NavHost(navController = navController, startDestination = "Winner Screen") {
         composable("Home Screen") { HomePageScreen(navController, viewModel) }
         composable("Create Game/{userName}") {backStackEntry ->
             val userName = backStackEntry.arguments?.getString("userName") ?: ""
@@ -33,5 +34,6 @@ fun NavigationGraph(navController: NavHostController, viewModel: GameViewModel) 
             val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
             WaitingRoomScreen(navController, roomName, viewModel)
         }
+        composable("Winner Screen") { WinnerScreen(navController, viewModel) }
     }
 }

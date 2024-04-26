@@ -124,7 +124,7 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, viewMo
                         else{
                             Icon(
                                 imageVector = ImageVector.vectorResource(id = R.drawable.waiting),
-                                contentDescription = "Player",
+                                contentDescription = "Wait",
                                 tint = Color.White
                             )
                         }
@@ -161,7 +161,7 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, viewMo
                         else{
                             Icon(
                                 imageVector = ImageVector.vectorResource(id = R.drawable.waiting),
-                                contentDescription = "Player",
+                                contentDescription = "Wait",
                                 tint = Color.White
                             )
                         }
@@ -176,6 +176,7 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, viewMo
 
                     Button(
                         onClick = {
+                            navController.navigate("Winner Screen")
                             /*TODO Go to player screen*/
                         },
                         modifier = Modifier
