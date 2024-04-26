@@ -2,6 +2,7 @@ package pt.isec.sofiaigp.whatdoyoumeme.data
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 class GameViewModel() : ViewModel() {
@@ -32,6 +33,10 @@ class GameViewModel() : ViewModel() {
 
     fun joinGameRoom(playerName: String, roomId: String, maxPlayers: Int) {
         firebaseManager.joinGameRoom(playerName, roomId, maxPlayers)
+    }
+
+    fun getGameRoomByName(roomName: String): MutableLiveData<GameRoom?> {
+        return firebaseManager.getGameRoomByName(roomName)
     }
 
 }

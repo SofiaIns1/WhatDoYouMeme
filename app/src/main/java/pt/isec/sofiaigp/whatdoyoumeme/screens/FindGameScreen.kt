@@ -48,7 +48,7 @@ import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.PurpleGrey80
 
 @Composable
 fun GameRoomList(
-    gameRooms: List<GameRoom>, selectedGameRoomId: MutableState<String>, maxPlayers: MutableState<Int>,  onGameRoomClicked: (String, Int) -> Unit
+    gameRooms: List<GameRoom>, selectedGameRoomId: MutableState<String>, maxPlayers: MutableState<Int>, onGameRoomClicked: (String, Int, String) -> Unit
 ) {
     LazyColumn {
         itemsIndexed(gameRooms) { _, gameRoom ->
@@ -71,9 +71,12 @@ fun GameRoomList(
                                 gameRoom.roomId?.let { it1 ->
                                     onGameRoomClicked(
                                         it1,
-                                        gameRoom.maxPlayers
+                                        gameRoom.maxPlayers,
+                                        it
                                     )
                                 }
+
+
                             }
                     )
                 }
@@ -116,6 +119,8 @@ fun FindGameScreen(navController: NavHostController, viewModel: GameViewModel, u
     val maxPlayers = remember {
         mutableIntStateOf(0)
     }
+
+    var roomName: String = ""
 
     val gameRooms = viewModel.gameRooms.value
 
@@ -208,9 +213,10 @@ fun FindGameScreen(navController: NavHostController, viewModel: GameViewModel, u
                         gameRooms = gameRooms,
                         selectedGameRoomId,
                         maxPlayers,
-                        onGameRoomClicked = { roomId, max ->
+                        onGameRoomClicked = { roomId, max, name ->
                             selectedGameRoomId.value = roomId
                             maxPlayers.intValue = max
+                            roomName = name
                         }
                     )
                 }
@@ -227,6 +233,7 @@ fun FindGameScreen(navController: NavHostController, viewModel: GameViewModel, u
                 onClick = {
                     selectedGameRoomId.value.let { roomId ->
                         viewModel.joinGameRoom(userName, roomId, maxPlayers.intValue)
+                        navController.navigate("Waiting Room/${roomName}")
                     }
                 },
                 modifier = Modifier

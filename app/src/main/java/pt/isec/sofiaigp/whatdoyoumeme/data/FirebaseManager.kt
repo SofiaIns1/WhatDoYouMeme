@@ -1,8 +1,11 @@
 package pt.isec.sofiaigp.whatdoyoumeme.data
 
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.toObject
 
 class FirebaseManager() {
 
@@ -133,5 +136,28 @@ class FirebaseManager() {
         }
 
 
+    }
+
+    fun getGameRoomByName(roomName: String): MutableLiveData<GameRoom?> {
+        val gameRoomLiveData = MutableLiveData<GameRoom?>()
+        db.collection("game_rooms")
+            .whereEqualTo("roomName", roomName)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (!querySnapshot.isEmpty) {
+                    for (document in querySnapshot.documents) {
+                        val gameRoom = document.toObject(GameRoom::class.java)
+                        gameRoomLiveData.value = gameRoom
+
+                    }
+                } else {
+                    Log.d("TAG", "Game Room not found")
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("TAG", "Error getting game room: $e")
+                gameRoomLiveData.value = null
+            }
+        return gameRoomLiveData
     }
 }

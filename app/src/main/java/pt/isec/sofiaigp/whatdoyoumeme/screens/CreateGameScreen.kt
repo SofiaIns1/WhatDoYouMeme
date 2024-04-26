@@ -114,6 +114,7 @@ fun CreateGameScreen(navController: NavHostController, viewModel: GameViewModel,
             Button(
                 onClick = {
                     viewModel.createGameRoom(gameRoomName, numPlayers, numRounds, userName)
+                    navController.navigate("Waiting Room/${gameRoomName}")
                 },
                 modifier = Modifier
                     .height(65.dp)
