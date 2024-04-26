@@ -28,6 +28,7 @@ class GameViewModel() : ViewModel() {
 
     fun createGameRoom(roomName: String, numPlayers: Int, numRounds: Int, playerName: String) {
         firebaseManager.createGameRoom(roomName, numPlayers, numRounds, playerName)
+        /*TODO: only allow to create room if a name has been given*/
     }
 
     fun joinGameRoom(playerName: String, roomId: String, maxPlayers: Int) {

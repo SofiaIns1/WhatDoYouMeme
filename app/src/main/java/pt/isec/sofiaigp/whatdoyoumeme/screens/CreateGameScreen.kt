@@ -23,11 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import pt.isec.sofiaigp.whatdoyoumeme.R
 import pt.isec.sofiaigp.whatdoyoumeme.components.GoBackBar
 import pt.isec.sofiaigp.whatdoyoumeme.components.InputField
@@ -114,6 +112,8 @@ fun CreateGameScreen(navController: NavHostController, viewModel: GameViewModel,
             Button(
                 onClick = {
                     viewModel.createGameRoom(gameRoomName, numPlayers, numRounds, userName)
+                    navController.navigate("Waiting Room/${gameRoomName}")
+                          /*TODO: send gameRoomID*/
                 },
                 modifier = Modifier
                     .height(65.dp)
@@ -130,15 +130,6 @@ fun CreateGameScreen(navController: NavHostController, viewModel: GameViewModel,
                 )
 
             }
-
-
         }
     }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun CreateGameScreenPreview() {
-    //CreateGameScreen(rememberNavController())
 }
