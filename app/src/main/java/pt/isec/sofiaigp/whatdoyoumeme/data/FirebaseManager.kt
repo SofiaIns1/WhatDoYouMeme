@@ -96,7 +96,6 @@ class FirebaseManager() {
             .addOnFailureListener { e ->
                 Log.e("TAG", "Error querying players: $e")
             }
-
     }
 
     fun getGameRoomsList(onUpdate: (List<GameRoom>) -> Unit) {
@@ -129,7 +128,6 @@ class FirebaseManager() {
                 onUpdate(gameRooms)
             }
         }
-
-
     }
+
 }

@@ -11,6 +11,7 @@ import pt.isec.sofiaigp.whatdoyoumeme.screens.CreateGameScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.FindGameScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.GameRulesScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.HomePageScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.WaitingRoomScreen
 
 
 @Composable
@@ -27,6 +28,10 @@ fun NavigationGraph(navController: NavHostController, viewModel: GameViewModel) 
         composable("Find Game/{userName}") {backStackEntry ->
             val userName = backStackEntry.arguments?.getString("userName") ?: ""
             FindGameScreen(navController, viewModel, userName)
+        }
+        composable("Waiting Room/{roomName}") {backStackEntry ->
+            val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
+            WaitingRoomScreen(navController, roomName, viewModel)
         }
     }
 }
