@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import pt.isec.sofiaigp.whatdoyoumeme.R
 import pt.isec.sofiaigp.whatdoyoumeme.components.GoBackBar
 import pt.isec.sofiaigp.whatdoyoumeme.components.InputField
@@ -113,7 +114,6 @@ fun CreateGameScreen(navController: NavHostController, viewModel: GameViewModel,
                 onClick = {
                     viewModel.createGameRoom(gameRoomName, numPlayers, numRounds, userName)
                     navController.navigate("Waiting Room/${gameRoomName}")
-                          /*TODO: send gameRoomID*/
                 },
                 modifier = Modifier
                     .height(65.dp)

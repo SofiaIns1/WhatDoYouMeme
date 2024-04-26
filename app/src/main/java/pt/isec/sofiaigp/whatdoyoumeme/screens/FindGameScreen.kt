@@ -19,6 +19,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -31,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -46,7 +48,7 @@ import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.PurpleGrey80
 
 @Composable
 fun GameRoomList(
-    gameRooms: List<GameRoom>, selectedGameRoomId: MutableState<String>, maxPlayers: MutableState<Int>,  onGameRoomClicked: (String, Int) -> Unit
+    gameRooms: List<GameRoom>, selectedGameRoomId: MutableState<String>, maxPlayers: MutableState<Int>, onGameRoomClicked: (String, Int, String) -> Unit
 ) {
     LazyColumn {
         itemsIndexed(gameRooms) { _, gameRoom ->
@@ -69,7 +71,8 @@ fun GameRoomList(
                                 gameRoom.roomId?.let { it1 ->
                                     onGameRoomClicked(
                                         it1,
-                                        gameRoom.maxPlayers
+                                        gameRoom.maxPlayers,
+                                        it
                                     )
                                 }
                             }
@@ -109,11 +112,13 @@ fun FindGameScreen(navController: NavHostController, viewModel: GameViewModel, u
     }
 
     val selectedGameRoomId = remember {
-        mutableStateOf("")
+        mutableStateOf<String>("")
     }
     val maxPlayers = remember {
         mutableIntStateOf(0)
     }
+
+    var roomName: String = ""
 
     val gameRooms = viewModel.gameRooms.value
 
@@ -206,9 +211,10 @@ fun FindGameScreen(navController: NavHostController, viewModel: GameViewModel, u
                         gameRooms = gameRooms,
                         selectedGameRoomId,
                         maxPlayers,
-                        onGameRoomClicked = { roomId, max ->
+                        onGameRoomClicked = { roomId, max, name ->
                             selectedGameRoomId.value = roomId
                             maxPlayers.intValue = max
+                            roomName = name
                         }
                     )
                 }
@@ -225,7 +231,7 @@ fun FindGameScreen(navController: NavHostController, viewModel: GameViewModel, u
                 onClick = {
                     selectedGameRoomId.value.let { roomId ->
                         viewModel.joinGameRoom(userName, roomId, maxPlayers.intValue)
-                        navController.navigate("Waiting Room/${roomId}")
+                        navController.navigate("Waiting Room/${roomName}")
                     }
                 },
                 modifier = Modifier
