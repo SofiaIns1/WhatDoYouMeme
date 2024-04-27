@@ -103,8 +103,6 @@ fun JudgeScreen(navController: NavController, viewModel: GameViewModel, roomName
                     }
                 }
             }
-
-
         }
 
         Spacer(modifier = Modifier.height(15.dp))
