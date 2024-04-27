@@ -76,25 +76,6 @@ fun WaitingRoomScreenTTTTT(viewModel: GameViewModel, roomName: String) {
     }
 
 
-//    Column(
-//        modifier = Modifier.fillMaxSize()
-//    ) {
-//        gameRoom.value?.roomName?.let {
-//            Text(
-//                text = it,
-//
-//                )
-//        }
-//        gameRoom.value?.players?.size?.toString().let {
-//            if (it != null) {
-//                Text(
-//                    text = it,
-//                )
-//            }
-//        }
-//
-//
-//    }
 
 }
 
