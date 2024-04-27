@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
+import kotlinx.coroutines.tasks.await
 
 class FirebaseManager() {
 
@@ -160,4 +161,32 @@ class FirebaseManager() {
             }
         return gameRoomLiveData
     }
+
+    suspend fun getRandomMemeImages(): List<String>{
+        val imagesURL = mutableListOf<String>()
+
+        try{
+            val querySnapshot = db.collection("memes").get().await()
+
+            if(querySnapshot.size() < 6){
+                throw Exception("Not enough images on firestore")
+            }
+
+            val shuffleDocuments = querySnapshot.documents.shuffled()
+
+            for(i in 0 until 6){
+                val imageURL = shuffleDocuments[i].getString("imageURL")
+                imageURL?.let {
+                    imagesURL.add(it)
+                    Log.d("TAG", "IMAGES: $imageURL\n")
+                }
+            }
+        } catch (e: Exception){
+            e.printStackTrace()
+        }
+
+        return imagesURL
+
+    }
+
 }

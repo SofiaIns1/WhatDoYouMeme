@@ -11,12 +11,6 @@ data class GameRoom(
 )
 
 
-//data class GameRoom(
-//    var name : String ?= null,
-//    var players : Int ?= 0,
-//    var maxPlayers : Int ?= 0
-//)
-
 data class GameState(
     val score: Int,
     //val gamaStatus: GameStatus ?? tipo enum: started, waiting, and wtv

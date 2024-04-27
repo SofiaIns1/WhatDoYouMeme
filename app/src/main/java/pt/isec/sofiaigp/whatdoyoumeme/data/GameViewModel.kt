@@ -39,4 +39,8 @@ class GameViewModel() : ViewModel() {
         return firebaseManager.getGameRoomByName(roomName)
     }
 
+    suspend fun getRandomMemeImages(): List<String>{
+        return firebaseManager.getRandomMemeImages()
+    }
+
 }
