@@ -188,4 +188,28 @@ class FirebaseManager() {
 
     }
 
+    suspend fun getRandomPlayableCards(): List<String>{
+        val sentences = mutableListOf<String>()
+        try{
+            val querySnapshot = db.collection("playable_cards").get().await()
+
+            if(querySnapshot.size() < 7){
+                throw Exception("Not enough playable cards on firestore")
+            }
+
+            val shuffleDocuments = querySnapshot.documents.shuffled()
+
+            for(i in 0 until 7){
+                val sentence = shuffleDocuments[i].getString("text")
+                sentence?.let {
+                    sentences.add(it)
+                    Log.d("TAG", "SENTENCES: $sentence")
+                }
+            }
+        } catch (e: Exception){
+            e.printStackTrace()
+        }
+
+        return sentences
+    }
 }

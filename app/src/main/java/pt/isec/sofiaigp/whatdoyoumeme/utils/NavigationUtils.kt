@@ -10,10 +10,12 @@ import pt.isec.sofiaigp.whatdoyoumeme.screens.CreateGameScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.FindGameScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.GameRulesScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.HomePageScreen
-import pt.isec.sofiaigp.whatdoyoumeme.screens.JudgeScreen
-import pt.isec.sofiaigp.whatdoyoumeme.screens.JudgeWaitScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.judge.JudgeScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.judge.JudgeWaitScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.WaitingRoomScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.WinnerScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.player.PlayerScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.player.PlayerWaitScreen
 
 
 @Composable
@@ -39,6 +41,7 @@ fun NavigationGraph(navController: NavHostController, viewModel: GameViewModel) 
             val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
             WinnerScreen(navController, viewModel, roomName)
         }
+        //Judge
         composable("Judge Screen/{roomName}") {backStackEntry ->
             val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
             JudgeScreen(navController, viewModel, roomName)
@@ -46,6 +49,15 @@ fun NavigationGraph(navController: NavHostController, viewModel: GameViewModel) 
         composable("Judge Wait/{roomName}") {backStackEntry ->
             val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
             JudgeWaitScreen(viewModel, roomName)
+        }
+        //Player
+        composable("Player Screen/{roomName}") {backStackEntry ->
+            val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
+            PlayerScreen(navController, viewModel, roomName)
+        }
+        composable("Player Wait/{roomName}") {backStackEntry ->
+            val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
+            PlayerWaitScreen(navController, viewModel, roomName)
         }
     }
 }

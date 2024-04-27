@@ -1,4 +1,4 @@
-package pt.isec.sofiaigp.whatdoyoumeme.screens
+package pt.isec.sofiaigp.whatdoyoumeme.screens.judge
 
 import android.util.Log
 import androidx.compose.foundation.Image

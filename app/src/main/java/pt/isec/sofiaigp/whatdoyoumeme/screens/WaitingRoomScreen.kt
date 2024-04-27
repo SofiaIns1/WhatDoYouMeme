@@ -180,8 +180,8 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, viewMo
                         Button(
                             onClick = {
                                 /*TODO Go to player screen*/
-                                      navController.navigate("Judge Screen/${roomName}")
-                                      //navController.navigate("Waiting RoomT/${roomName}")
+                                      //navController.navigate("Judge Screen/${roomName}")
+                                      navController.navigate("Player Screen/${roomName}")
                             },
                             modifier = Modifier
                                 .height(65.dp)

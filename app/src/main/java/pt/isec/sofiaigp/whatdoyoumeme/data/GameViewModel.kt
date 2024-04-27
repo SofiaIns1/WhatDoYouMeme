@@ -23,8 +23,6 @@ class GameViewModel() : ViewModel() {
 
     fun createPlayer(playerName: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
         firebaseManager.createPlayer(playerName = playerName, onSuccess = onSuccess, onFailure = onFailure)
-
-
     }
 
     fun createGameRoom(roomName: String, numPlayers: Int, numRounds: Int, playerName: String) {
@@ -44,4 +42,7 @@ class GameViewModel() : ViewModel() {
         return firebaseManager.getRandomMemeImages()
     }
 
+    suspend fun getRandomPlayableCards(): List<String>{
+        return firebaseManager.getRandomPlayableCards()
+    }
 }
