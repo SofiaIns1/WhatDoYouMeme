@@ -10,6 +10,8 @@ import pt.isec.sofiaigp.whatdoyoumeme.screens.CreateGameScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.FindGameScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.GameRulesScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.HomePageScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.JudgeScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.JudgeWaitScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.WaitingRoomScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.WinnerScreen
 
@@ -36,6 +38,14 @@ fun NavigationGraph(navController: NavHostController, viewModel: GameViewModel) 
         composable("Winner Screen/{roomName}") {backStackEntry ->
             val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
             WinnerScreen(navController, viewModel, roomName)
+        }
+        composable("Judge Screen/{roomName}") {backStackEntry ->
+            val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
+            JudgeScreen(navController, viewModel, roomName)
+        }
+        composable("Judge Wait/{roomName}") {backStackEntry ->
+            val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
+            JudgeWaitScreen(viewModel, roomName)
         }
     }
 }

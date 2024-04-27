@@ -28,7 +28,7 @@ import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import kotlinx.coroutines.launch
 import pt.isec.sofiaigp.whatdoyoumeme.data.GameViewModel
-
+/*
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun WaitingRoomScreenTTTTT(viewModel: GameViewModel, roomName: String) {
@@ -77,8 +77,8 @@ fun WaitingRoomScreenTTTTT(viewModel: GameViewModel, roomName: String) {
 
 
 
-}
-
+}*/
+/*
 @OptIn(ExperimentalCoilApi::class)
 @Composable
 fun ImageFromURL(imageURL: String) {
@@ -91,4 +91,4 @@ fun ImageFromURL(imageURL: String) {
         contentDescription = null,
         modifier = Modifier.size(200.dp)
     )
-}
+}*/
