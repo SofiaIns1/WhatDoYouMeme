@@ -75,8 +75,6 @@ fun GameRoomList(
                                         it
                                     )
                                 }
-
-
                             }
                     )
                 }
@@ -245,7 +243,7 @@ fun FindGameScreen(navController: NavHostController, viewModel: GameViewModel, u
                 )
             ) {
                 Text(
-                    text = "START GAME",
+                    text = "JOIN GAME",
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
                 )
@@ -253,180 +251,4 @@ fun FindGameScreen(navController: NavHostController, viewModel: GameViewModel, u
             }
         }
     }
-}
-
-
-//@Composable
-//fun FindGameScreen(navController: NavHostController) {
-//    var roomSearch by remember {
-//        mutableStateOf("")
-//    }
-//
-//    val gameRooms = listOf(GameRoom("Room 1", 1, 2), GameRoom("Room 2", 2, 3), GameRoom("Room 3", 3, 4)) /*TODO buscar à DB*/
-//
-//    Column (
-//        horizontalAlignment = Alignment.CenterHorizontally,
-//        verticalArrangement = Arrangement.Center,
-//        modifier = Modifier
-//            .background(DarkBlue)
-//            .padding(bottom = 20.dp)
-//            .fillMaxSize()
-//    ) {
-//        Column(
-//            horizontalAlignment = Alignment.CenterHorizontally,
-//            verticalArrangement = Arrangement.Center,
-//            modifier = Modifier
-//                .background(DarkBlue)
-//                .padding(bottom = 20.dp)
-//                .weight(1f)
-//        ){
-//            GoBackBarWhite(navController)
-//
-//            Text(
-//                text = "WHAT DO YOU",
-//                color = Color.White,
-//                fontSize = 33.sp,
-//                fontWeight = FontWeight.Bold
-//            )
-//            Text(
-//                text = "MEME?",
-//                color = Color.White,
-//                fontSize = 64.sp,
-//                fontWeight = FontWeight.Bold
-//            )
-//            Column(
-//                modifier = Modifier
-//                    .padding(20.dp)
-//            ) {
-//                SearchInputField(
-//                    value = roomSearch,
-//                    onValueChange = {roomSearch = it},
-//                    placeholder = "Search for Game Room"
-//                )
-//
-//                Spacer(modifier = Modifier.padding(vertical = 5.dp))
-//
-//                Column(
-//                    modifier = Modifier
-//                        .clip(shape = RoundedCornerShape(30.dp))
-//                        .background(Color.White)
-//                        .fillMaxSize(),
-//                ) {
-//                    Row (
-//                        modifier = Modifier
-//                    ){
-//                        Text(
-//                            text = "ROOM NAME",
-//                            color = DarkLilac,
-//                            fontSize = 20.sp,
-//                            textAlign = TextAlign.Center,
-//                            fontWeight = FontWeight.Bold,
-//                            modifier = Modifier
-//                                .weight(2f)
-//                                .padding(5.dp)
-//                        )
-//
-//                        Divider(
-//                            modifier = Modifier
-//                                .height(40.dp)
-//                                .width(1.dp),
-//                            color = DarkLilac
-//                        )
-//
-//                        Text(
-//                            text = "PLAYERS",
-//                            color = DarkLilac,
-//                            fontSize = 20.sp,
-//                            textAlign = TextAlign.Center,
-//                            fontWeight = FontWeight.Bold,
-//                            modifier = Modifier
-//                                .weight(1f)
-//                                .padding(5.dp)
-//                        )
-//
-//                    }
-//                    Divider(
-//                        color = DarkLilac
-//                    )
-//
-//                    LazyColumn (
-//                        modifier = Modifier
-//                            .padding(0.dp)
-//                    ){
-//                        items(gameRooms){i ->
-//                            Row (
-//                                modifier = Modifier
-//                            ){
-//                                i.name?.let {
-//                                    Text(
-//                                        text = it,
-//                                        color = DarkLilac,
-//                                        fontSize = 20.sp,
-//                                        textAlign = TextAlign.Center,
-//                                        modifier = Modifier
-//                                            .weight(2f)
-//                                            .padding(5.dp)
-//                                    )
-//                                }
-//
-//                                Divider(
-//                                    modifier = Modifier
-//                                        .height(40.dp)
-//                                        .width(1.dp),
-//                                    color = DarkLilac
-//                                )
-//
-//                                Text(
-//                                    text = i.players.toString() + "/" + i.maxPlayers.toString(),
-//                                    color = DarkLilac,
-//                                    fontSize = 20.sp,
-//                                    textAlign = TextAlign.Center,
-//                                    modifier = Modifier
-//                                        .weight(1f)
-//                                        .padding(5.dp)
-//                                )
-//
-//                            }
-//                            Divider(
-//                                color = DarkLilac
-//                            )
-//                        }
-//                    }
-//                }
-//
-//                Spacer(modifier = Modifier.padding(vertical = 5.dp))
-//            }
-//
-//        }
-//        Column (
-//            modifier = Modifier
-//                .padding(20.dp, 0.dp, 20.dp, 20.dp)
-//        ){
-//            Button(
-//                onClick = {
-//                    /*TODO*/
-//                },
-//                modifier = Modifier
-//                    .height(65.dp)
-//                    .fillMaxWidth(),
-//                colors = ButtonDefaults.buttonColors(
-//                    containerColor = Lilac,
-//                    contentColor = Color.White
-//                )
-//            ) {
-//                Text(
-//                    text = "START GAME",
-//                    fontSize = 30.sp,
-//                    fontWeight = FontWeight.Bold,
-//                )
-//
-//            }
-//        }
-//    }
-//}
-
-@Preview(showBackground = true)
-@Composable
-private fun FindGameScreenPreview() {
-    // FindGameScreen(rememberNavController())
 }
