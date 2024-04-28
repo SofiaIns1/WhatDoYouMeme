@@ -67,7 +67,7 @@ fun JudgeWaitScreen(viewModel : GameViewModel, roomName : String/*, imageUrl : S
                         items(it) { player ->
                             /*TODO: check if gameRoom.value?.players!![player] is not the judge*/
                             Text(
-                                text = gameRoom.value?.players!![player] /*TODO: instead of id, present the username*/
+                                text = gameRoom.value?.players!![player].username /*TODO: instead of id, present the username*/
                                         + " = score" /*TODO: when implemented, show the user score*/,
                                 color = Color.White,
                                 fontSize = 10.sp

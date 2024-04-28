@@ -95,12 +95,14 @@ fun PlayerScreen(navController: NavController, viewModel : GameViewModel, roomNa
                     gameRoom.value?.players?.size?.let {
                         items(it) { player ->
                             /*TODO: check if gameRoom.value?.players!![player] is not this screen's player*/
-                            Text(
-                                text = gameRoom.value?.players!![player] /*TODO: instead of id, present the username*/
+                            gameRoom.value?.players!![player].username?.let { it1 ->
+                                Text(
+                                    text = it1 /*TODO: instead of id, present the username*/
                                         + " = score" /*TODO: when implemented, show the user score*/,
-                                color = Color.DarkGray,
-                                fontSize = 10.sp
-                            )
+                                    color = Color.DarkGray,
+                                    fontSize = 10.sp
+                                )
+                            }
                         }
                     }
                 }

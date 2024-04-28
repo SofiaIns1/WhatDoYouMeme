@@ -47,7 +47,7 @@ class FirebaseManager() {
     fun createGameRoom(roomName: String, maxPlayers: Int, numRounds: Int, playerName: String) {
         val gameRoom = hashMapOf(
             "roomName" to roomName,
-            "players" to emptyList<String>(),
+            "players" to emptyList<User>(),
             "maxPlayers" to maxPlayers,
             "numRounds" to numRounds
         )
@@ -65,6 +65,46 @@ class FirebaseManager() {
 
     fun joinGameRoom(playerName: String, roomId: String, maxPlayers: Int) {
         val playersCollection = db.collection("players")
+
+        playersCollection.whereEqualTo("playerName", playerName)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (!querySnapshot.isEmpty) {
+                    for (document in querySnapshot.documents) {
+                        val player = hashMapOf(
+                            "username" to playerName,
+                            "score" to 0,
+                            "role" to "player"
+                        )
+                        val roomRef =
+                            db.collection("game_rooms").document(roomId).collection("players")
+
+                        val p = querySnapshot.documents
+                        if (p.size < maxPlayers) {
+                            roomRef.add(player)
+                                .addOnSuccessListener {
+                                    Log.d(
+                                        "TAG",
+                                        "Player $playerName added to game room $roomId"
+                                    )
+                                }
+                                .addOnFailureListener { e ->
+                                    Log.e("TAG", "Error adding player to game room: $e")
+                                }
+                        } else {
+                            Log.d("TAG", "Maximum players reached in game room $roomId")
+
+                        }
+                    }
+                }else {
+                    Log.d("TAG", "Player $playerName not found")
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("TAG", "Error querying players: $e")
+            }
+
+        /*val playersCollection = db.collection("players")
 
         playersCollection.whereEqualTo("playerName", playerName)
             .get()
@@ -101,7 +141,7 @@ class FirebaseManager() {
             }
             .addOnFailureListener { e ->
                 Log.e("TAG", "Error querying players: $e")
-            }
+            }*/
     }
 
     fun getGameRoomsList(onUpdate: (List<GameRoom>) -> Unit) {
@@ -117,14 +157,15 @@ class FirebaseManager() {
                 for (document in snapshot.documents) {
                     val roomId = document.id
                     val roomName = document.getString("roomName")
-                    val players = document.get("players") as List<String>
+                    //val players = document.get("players") as List<String>
                     val maxPlayers = document.getLong("maxPlayers")?.toInt()
-                    val currentNumPlayers = players.size
+                    val currentNumPlayers = 5//players.size
                     val numRounds = document.getLong("numRounds")?.toInt()
                     val gameRoom = GameRoom(
                         roomId,
                         roomName,
-                        players,
+                        emptyList(),
+                        //players,
                         maxPlayers,
                         currentNumPlayers,
                         numRounds

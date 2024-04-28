@@ -90,9 +90,9 @@ fun WinnerScreen(navController: NavHostController, viewModel: GameViewModel, roo
             ) {
                 gameRoom.value?.players?.size?.let {
                     items(it){ player ->
-                        if(gameRoom.value?.players!![player] != gameRoom.value?.winner){
+                        if(gameRoom.value?.players!![player].username != gameRoom.value?.winner){
                             Text(
-                                text = gameRoom.value?.players!![player] + " = score", /*TODO get player name instead of id and score*/
+                                text = gameRoom.value?.players!![player].username + " = score", /*TODO get player name instead of id and score*/
                                 color = Color.LightGray,
                                 fontSize = 33.sp,
                             )

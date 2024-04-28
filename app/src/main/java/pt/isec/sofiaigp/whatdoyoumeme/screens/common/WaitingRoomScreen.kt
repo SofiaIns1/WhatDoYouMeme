@@ -109,7 +109,7 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, viewMo
                                     contentDescription = "Player",
                                     tint = Lilac
                                 )
-                                gameRoom.value?.players?.get(i)?.let {
+                                gameRoom.value?.players?.get(i)?.username?.let {
                                     Text(
                                         text = it, /*TODO search player DB to get the user name instead of its id*/
                                         fontSize = 20.sp,
@@ -146,7 +146,7 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, viewMo
                                         contentDescription = "Player",
                                         tint = Lilac
                                     )
-                                    gameRoom.value?.players?.get(i)?.let {
+                                    gameRoom.value?.players?.get(i)?.username?.let {
                                         Text(
                                             text = it,/*TODO search player DB to get the user name instead of its id*/
                                             fontSize = 20.sp,

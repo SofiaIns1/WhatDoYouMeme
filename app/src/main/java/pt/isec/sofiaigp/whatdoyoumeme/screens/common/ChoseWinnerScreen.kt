@@ -79,7 +79,7 @@ fun ChoseWinnerScreen(navController: NavController, viewModel : GameViewModel, r
                         items(it) { player ->
                             /*TODO: check if gameRoom.value?.players!![player] is not this screen's player*/
                             Text(
-                                text = gameRoom.value?.players!![player] /*TODO: instead of id, present the username*/
+                                text = gameRoom.value?.players!![player].username /*TODO: instead of id, present the username*/
                                         + " = score" /*TODO: when implemented, show the user score*/,
                                 color = Color.DarkGray,
                                 fontSize = 10.sp

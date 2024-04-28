@@ -1,5 +1,6 @@
 package pt.isec.sofiaigp.whatdoyoumeme.screens.common
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -96,7 +97,8 @@ fun HomePageScreen(navController: NavHostController, viewModel: GameViewModel) {
                 onClick = {
                     if (isValidInput()) {
                         viewModel.createPlayer(userName, onSuccess = {
-                            navController.navigate("Find Game/${userName}")
+                            //navController.navigate("Find Game/${userName}")
+                                                                     Log.i("Home page", "navigate to find game")
                         },
                             onFailure = {
                                 Toast.makeText(
@@ -132,7 +134,7 @@ fun HomePageScreen(navController: NavHostController, viewModel: GameViewModel) {
                     if (isValidInput()) {
                         viewModel.createPlayer(userName, onSuccess = {
                             navController.navigate("Create Game/${userName}")
-
+                            Log.i("Home Screen", "Navigate to create game")
                         },
                             onFailure = {
                                 Toast.makeText(
