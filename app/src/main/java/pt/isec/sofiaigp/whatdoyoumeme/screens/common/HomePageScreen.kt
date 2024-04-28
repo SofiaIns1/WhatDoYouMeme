@@ -1,4 +1,4 @@
-package pt.isec.sofiaigp.whatdoyoumeme.screens
+package pt.isec.sofiaigp.whatdoyoumeme.screens.common
 
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
@@ -17,7 +17,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,7 +31,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import pt.isec.sofiaigp.whatdoyoumeme.R
 import pt.isec.sofiaigp.whatdoyoumeme.components.InputField
 import pt.isec.sofiaigp.whatdoyoumeme.data.GameViewModel

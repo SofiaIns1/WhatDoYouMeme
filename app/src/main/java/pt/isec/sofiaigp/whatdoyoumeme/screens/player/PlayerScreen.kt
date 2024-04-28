@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,8 +29,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -46,7 +50,7 @@ fun PlayerScreen(navController: NavController, viewModel : GameViewModel, roomNa
     val gameRoom = viewModel.getGameRoomByName(roomName).observeAsState()
     val coroutineScope = rememberCoroutineScope()
 
-    var memeUrl by remember { mutableStateOf("not empty") }
+    var memeUrl by remember { mutableStateOf("n") }
     var sentences by remember { mutableStateOf<List<String>>(emptyList()) }
 
     LaunchedEffect(Unit) {
@@ -90,7 +94,7 @@ fun PlayerScreen(navController: NavController, viewModel : GameViewModel, roomNa
                 ) {
                     gameRoom.value?.players?.size?.let {
                         items(it) { player ->
-                            /*TODO: check if gameRoom.value?.players!![player] is not the judge*/
+                            /*TODO: check if gameRoom.value?.players!![player] is not this screen's player*/
                             Text(
                                 text = gameRoom.value?.players!![player] /*TODO: instead of id, present the username*/
                                         + " = score" /*TODO: when implemented, show the user score*/,
@@ -173,28 +177,45 @@ fun PlayerScreen(navController: NavController, viewModel : GameViewModel, roomNa
             }
         }
 
+        Spacer(modifier = Modifier.height(15.dp))
+
+        ClickableText(
+            text = AnnotatedString("Leave party"),
+            style = TextStyle(
+                color = Color.DarkGray,
+                textDecoration = TextDecoration.Underline,
+                fontSize = 10.sp
+            ),
+            onClick = { offset ->
+                /*TODO delete user from database*/
+                navController.navigate("Home Screen")
+            }
+        )
     }
 }
 
 @Composable
-fun Card(sentence : String, memeUrl : String, roomName: String, navController: NavController){
+fun Card(sentence : String, memeUrl : String, roomName: String, navController: NavController, winner : Boolean = false){
     val angle = Random.nextInt(-5, 5)
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .rotate(angle.toFloat())
-            .height(210.dp)
+            .height(190.dp)
             .width(120.dp)
             .padding(2.dp)
             .background(DarkBlue, RoundedCornerShape(10.dp))
             .padding(1.dp)
             .clickable {
             /*TODO:
-               - verify if meme exists, then navigate to next screen;
+               - verify if meme exists(string not blank), then navigate to next screen;
                - show chosen card to the judge
             */
-                navController.navigate("Player Wait/${roomName}")
+                if(winner)
+                    navController.navigate("Show Winner/${roomName}")
+                else
+                    navController.navigate("Chose Winner/${roomName}")
             }
     ){
         Text(
@@ -217,7 +238,7 @@ fun MemeCard(memeUrl : String){
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .height(210.dp)
+                .height(190.dp)
                 .width(120.dp)
                 .padding(2.dp)
                 .background(DarkBlue, RoundedCornerShape(10.dp))
@@ -247,7 +268,7 @@ fun MemeCard(memeUrl : String){
             painter = painterResource(id = R.drawable.bru),
             contentDescription = "Bru",
             modifier = Modifier
-                .height(210.dp)
+                .height(190.dp)
                 .width(120.dp)
         )
     }

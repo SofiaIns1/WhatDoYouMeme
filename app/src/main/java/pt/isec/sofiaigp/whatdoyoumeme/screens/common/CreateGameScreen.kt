@@ -1,4 +1,4 @@
-package pt.isec.sofiaigp.whatdoyoumeme.screens
+package pt.isec.sofiaigp.whatdoyoumeme.screens.common
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement

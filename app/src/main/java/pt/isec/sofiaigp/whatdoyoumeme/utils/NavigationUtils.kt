@@ -6,16 +6,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import pt.isec.sofiaigp.whatdoyoumeme.data.GameViewModel
-import pt.isec.sofiaigp.whatdoyoumeme.screens.CreateGameScreen
-import pt.isec.sofiaigp.whatdoyoumeme.screens.FindGameScreen
-import pt.isec.sofiaigp.whatdoyoumeme.screens.GameRulesScreen
-import pt.isec.sofiaigp.whatdoyoumeme.screens.HomePageScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.common.CreateGameScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.common.FindGameScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.common.GameRulesScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.common.HomePageScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.judge.JudgeScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.judge.JudgeWaitScreen
-import pt.isec.sofiaigp.whatdoyoumeme.screens.WaitingRoomScreen
-import pt.isec.sofiaigp.whatdoyoumeme.screens.WinnerScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.common.WaitingRoomScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.common.WinnerScreen
 import pt.isec.sofiaigp.whatdoyoumeme.screens.player.PlayerScreen
-import pt.isec.sofiaigp.whatdoyoumeme.screens.player.PlayerWaitScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.common.ChoseWinnerScreen
+import pt.isec.sofiaigp.whatdoyoumeme.screens.common.RoundWinnerScreen
 
 
 @Composable
@@ -55,9 +56,13 @@ fun NavigationGraph(navController: NavHostController, viewModel: GameViewModel) 
             val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
             PlayerScreen(navController, viewModel, roomName)
         }
-        composable("Player Wait/{roomName}") {backStackEntry ->
+        composable("Chose Winner/{roomName}") {backStackEntry ->
             val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
-            PlayerWaitScreen(navController, viewModel, roomName)
+            ChoseWinnerScreen(navController, viewModel, roomName)
+        }
+        composable("Show Winner/{roomName}") {backStackEntry ->
+            val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
+            RoundWinnerScreen(navController, viewModel, roomName)
         }
     }
 }

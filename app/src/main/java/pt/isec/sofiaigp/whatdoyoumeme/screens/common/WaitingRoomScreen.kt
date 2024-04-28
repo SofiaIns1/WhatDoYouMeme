@@ -1,6 +1,5 @@
-package pt.isec.sofiaigp.whatdoyoumeme.screens
+package pt.isec.sofiaigp.whatdoyoumeme.screens.common
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
