@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -46,14 +47,33 @@ import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.LightBlue
 import kotlin.random.Random
 
 @Composable
-fun JudgeScreen(navController: NavController, viewModel: GameViewModel, roomName: String) {
+fun JudgeScreen(
+    navController: NavController,
+    viewModel: GameViewModel,
+    roomName: String,
+    userName: String
+) {
     val gameRoom = viewModel.getGameRoomByName(roomName).observeAsState()
+    val roomId = gameRoom.value?.roomId
+    val isJudge = roomId?.let { viewModel.isJudge(it) }
     val coroutineScope = rememberCoroutineScope()
     var imagesURL by remember { mutableStateOf<List<String>>(emptyList()) }
 
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             imagesURL = viewModel.getRandomMemeImages()
+        }
+    }
+
+    var score by remember {
+        mutableIntStateOf(0)
+    }
+
+    LaunchedEffect(roomId) {
+        if (roomId != null) {
+            viewModel.getPlayerScore(roomId, userName) { playerScore ->
+                score = playerScore
+            }
         }
     }
 
@@ -64,41 +84,43 @@ fun JudgeScreen(navController: NavController, viewModel: GameViewModel, roomName
             .background(DarkBlue)
             .padding(20.dp)
             .fillMaxSize()
-    ){
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-        ){
-            Column (
+        ) {
+            Column(
                 modifier = Modifier
                     .weight(1f),
                 horizontalAlignment = Alignment.Start
-            ){
+            ) {
                 Text(
-                    text = "Score = " + 5 /*TODO: Change to judge's score when score is implemented*/,
+                    text = "Score = $score",
                     color = Color.White,
                     fontSize = 30.sp,
                     textAlign = TextAlign.Start
                 )
             }
 
-            Column (
+            Column(
                 modifier = Modifier
                     .weight(1f),
                 horizontalAlignment = Alignment.End
-            ){
+            ) {
                 LazyColumn(
                     horizontalAlignment = Alignment.End
-                ){
+                ) {
                     gameRoom.value?.players?.size?.let {
                         items(it) { player ->
-                            /*TODO: check if gameRoom.value?.players!![player] is not the judge*/
-                            Text(
-                                text = gameRoom.value?.players!![player].username /*TODO: instead of id, present the username*/
-                                        + " = score" /*TODO: when implemented, show the user score*/,
-                                color = Color.White,
-                                fontSize = 10.sp
-                            )
+                            if (isJudge == false) {
+                                Text(
+                                    text = gameRoom.value?.players!![player].username
+                                            + " = " + gameRoom.value?.players!![player].score,
+                                    color = Color.White,
+                                    fontSize = 10.sp
+                                )
+                            }
+
                         }
                     }
                 }
@@ -112,10 +134,10 @@ fun JudgeScreen(navController: NavController, viewModel: GameViewModel, roomName
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .weight(1f)
-        ){
+        ) {
             for (i in 0 until 2) {
-                ImageFromURL(imagesURL.getOrNull(i) ?: "", navController, roomName)
-                if(i % 2 == 0){
+                ImageFromURL(imagesURL.getOrNull(i) ?: "", navController, roomName, userName)
+                if (i % 2 == 0) {
                     Spacer(modifier = Modifier.width(5.dp))
                 }
             }
@@ -125,15 +147,15 @@ fun JudgeScreen(navController: NavController, viewModel: GameViewModel, roomName
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .weight(1f)
-        ){
-            ImageFromURL(imagesURL.getOrNull(2) ?: "", navController, roomName)
+        ) {
+            ImageFromURL(imagesURL.getOrNull(2) ?: "", navController, roomName, userName)
 
             Column(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .weight(1f)
-            ){
+            ) {
                 Text(
                     text = "Juri",
                     color = LightBlue,
@@ -149,17 +171,17 @@ fun JudgeScreen(navController: NavController, viewModel: GameViewModel, roomName
                 )
             }
 
-            ImageFromURL(imagesURL.getOrNull(3) ?: "", navController, roomName)
+            ImageFromURL(imagesURL.getOrNull(3) ?: "", navController, roomName, userName)
         }
         Row(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .weight(1f)
-        ){
+        ) {
             for (i in 4 until 6) {
-                ImageFromURL(imagesURL.getOrNull(i) ?: "", navController, roomName)
-                if(i % 2 == 0){
+                ImageFromURL(imagesURL.getOrNull(i) ?: "", navController, roomName, userName)
+                if (i % 2 == 0) {
                     Spacer(modifier = Modifier.width(5.dp))
                 }
             }
@@ -175,8 +197,11 @@ fun JudgeScreen(navController: NavController, viewModel: GameViewModel, roomName
                 fontSize = 10.sp
             ),
             onClick = { offset ->
-                /*TODO delete user from database*/
-                /*TODO: select another judge*/
+                if (roomId != null) {
+                    viewModel.deletePlayer(roomId, userName)
+                    viewModel.selectJudge(roomId)
+                }
+
                 navController.navigate("Home Screen")
             }
         )
@@ -185,7 +210,7 @@ fun JudgeScreen(navController: NavController, viewModel: GameViewModel, roomName
 
 @OptIn(ExperimentalCoilApi::class)
 @Composable
-fun ImageFromURL(imageURL: String, navController: NavController, roomName: String) {
+fun ImageFromURL(imageURL: String, navController: NavController, roomName: String, userName: String) {
     val painter = rememberImagePainter(
         data = imageURL
     )
@@ -199,7 +224,7 @@ fun ImageFromURL(imageURL: String, navController: NavController, roomName: Strin
             .rotate(angle.toFloat())
             .clickable {
                 Log.i("Image", imageURL)
-                navController.navigate("Judge Wait/${roomName}")
+                navController.navigate("Judge Wait/${roomName}/$imageURL/$userName")
                 //navController.navigate("Judge Wait/${imageURL}")
                 /*val combinedString = roomName + "," + imageURL
                 navController.navigate("Judge Wait/${combinedString}")*/

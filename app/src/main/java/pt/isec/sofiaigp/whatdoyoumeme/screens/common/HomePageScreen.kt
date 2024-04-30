@@ -97,8 +97,8 @@ fun HomePageScreen(navController: NavHostController, viewModel: GameViewModel) {
                 onClick = {
                     if (isValidInput()) {
                         viewModel.createPlayer(userName, onSuccess = {
-                            //navController.navigate("Find Game/${userName}")
-                                                                     Log.i("Home page", "navigate to find game")
+                            navController.navigate("Find Game/${userName}")
+                            Log.i("Home page", "navigate to find game")
                         },
                             onFailure = {
                                 Toast.makeText(

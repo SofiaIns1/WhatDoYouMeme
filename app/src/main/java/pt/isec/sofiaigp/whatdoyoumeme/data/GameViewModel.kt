@@ -25,9 +25,8 @@ class GameViewModel() : ViewModel() {
         firebaseManager.createPlayer(playerName = playerName, onSuccess = onSuccess, onFailure = onFailure)
     }
 
-    fun createGameRoom(roomName: String, numPlayers: Int, numRounds: Int, playerName: String) {
-        firebaseManager.createGameRoom(roomName, numPlayers, numRounds, playerName)
-        /*TODO: only allow to create room if a name has been given*/
+    fun createGameRoom(roomName: String, numPlayers: Int, numRounds: Int, playerName: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
+        firebaseManager.createGameRoom(roomName, numPlayers, numRounds, playerName, onSuccess, onFailure)
     }
 
     fun joinGameRoom(playerName: String, roomId: String, maxPlayers: Int) {
@@ -44,5 +43,33 @@ class GameViewModel() : ViewModel() {
 
     suspend fun getRandomPlayableCards(): List<String>{
         return firebaseManager.getRandomPlayableCards()
+    }
+
+    fun selectJudge(roomId: String){
+        firebaseManager.selectJudge(roomId)
+    }
+
+    fun isJudge(roomId: String): Boolean{
+        return firebaseManager.isJudge(roomId)
+    }
+
+    fun addSelectedCard(card: String, playerName: String, roomId: String){
+        firebaseManager.addSelectedCard(card, playerName, roomId)
+    }
+
+    fun updateScore(chosenCard: String, roomId: String){
+        firebaseManager.updateScore(chosenCard, roomId)
+    }
+
+    fun getSelectedCards(roomId: String, onComplete: (List<String>) -> Unit){
+        firebaseManager.getSelectedCards(roomId, onComplete)
+    }
+
+    fun getPlayerScore(roomId: String, playerName: String, onComplete: (Int) -> Unit){
+        firebaseManager.getPlayerScore(roomId, playerName, onComplete)
+    }
+
+    fun deletePlayer(roomId: String, playerName: String){
+        firebaseManager.deletePlayer(roomId, playerName)
     }
 }

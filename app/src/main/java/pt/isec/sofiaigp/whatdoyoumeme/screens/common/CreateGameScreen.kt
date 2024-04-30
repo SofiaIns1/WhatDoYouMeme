@@ -1,5 +1,7 @@
 package pt.isec.sofiaigp.whatdoyoumeme.screens.common
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -39,6 +42,16 @@ fun CreateGameScreen(navController: NavHostController, viewModel: GameViewModel,
     var gameRoomName by remember { mutableStateOf("") }
     var numPlayers by remember { mutableIntStateOf(0) }
     var numRounds by remember { mutableIntStateOf(0) }
+
+    val context = LocalContext.current
+
+    fun isValidInput(): Boolean {
+        if (gameRoomName.isEmpty()) {
+            Toast.makeText(context, "Please enter a username", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        return true
+    }
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -112,8 +125,25 @@ fun CreateGameScreen(navController: NavHostController, viewModel: GameViewModel,
 
             Button(
                 onClick = {
-                    viewModel.createGameRoom(gameRoomName, numPlayers, numRounds, userName)
-                    navController.navigate("Waiting Room/${gameRoomName}")
+                    if (isValidInput()) {
+                        viewModel.createGameRoom(gameRoomName,
+                            numPlayers,
+                            numRounds,
+                            userName,
+                            onSuccess = {
+                                navController.navigate("Waiting Room/${gameRoomName}/$userName")
+                            },
+                            onFailure = {
+                                Toast.makeText(
+                                    context,
+                                    "Username already exists",
+                                    Toast.LENGTH_SHORT
+                                )
+                                    .show()
+                            }
+                        )
+                    }
+
                 },
                 modifier = Modifier
                     .height(65.dp)

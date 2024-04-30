@@ -1,5 +1,6 @@
 package pt.isec.sofiaigp.whatdoyoumeme.screens.common
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,20 +32,40 @@ import pt.isec.sofiaigp.whatdoyoumeme.screens.player.MemeCard
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.DarkBlue
 
 @Composable
-fun ChoseWinnerScreen(navController: NavController, viewModel : GameViewModel, roomName : String) {
+fun ChoseWinnerScreen(
+    navController: NavController, viewModel : GameViewModel, roomName : String, userName: String
+) {
+
     val gameRoom = viewModel.getGameRoomByName(roomName).observeAsState()
-    var user = "Judge" /*TODO: check if this user is the judge*/
+    val roomId = gameRoom.value?.roomId
+    var user = gameRoom.value?.roomId?.let { viewModel.isJudge(it) }
     var clickable = ""
     var meme = "not empty"
     var i = 0
 
-    val sentences = listOf("When you lie down for a quick nap and wake up 8 hours later",
-        "When you lie down for a quick nap and wake up 8 hours later",
-        "When you lie down for a quick nap and wake up 8 hours later",
-        "When you lie down for a quick nap and wake up 8 hours later",
-        "When you lie down for a quick nap and wake up 8 hours later") /*TODO: change to sentences chosen by the users (mutable state?)*/
+    var sentences by remember { mutableStateOf(emptyList<String>()) }
 
-    if(user == "judge"){
+    LaunchedEffect(key1 = roomId) {
+        if (roomId != null) {
+            viewModel.getSelectedCards(roomId) { cards ->
+                sentences = cards
+            }
+        }
+    }
+
+    var score by remember {
+        mutableIntStateOf(0)
+    }
+
+    LaunchedEffect(roomId) {
+        if (roomId != null) {
+            viewModel.getPlayerScore(roomId, userName){playerScore ->
+                score = playerScore
+            }
+        }
+    }
+
+    if(user == true){
         clickable = "yes"
     }
 
@@ -60,7 +87,7 @@ fun ChoseWinnerScreen(navController: NavController, viewModel : GameViewModel, r
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = "Score = " + 5 /*TODO: Change to judge's score when score is implemented*/,
+                    text = "Score = $score",
                     color = DarkBlue,
                     fontSize = 30.sp,
                     textAlign = TextAlign.Start
@@ -79,8 +106,8 @@ fun ChoseWinnerScreen(navController: NavController, viewModel : GameViewModel, r
                         items(it) { player ->
                             /*TODO: check if gameRoom.value?.players!![player] is not this screen's player*/
                             Text(
-                                text = gameRoom.value?.players!![player].username /*TODO: instead of id, present the username*/
-                                        + " = score" /*TODO: when implemented, show the user score*/,
+                                text = gameRoom.value?.players!![player].username
+                                        + " = " + gameRoom.value?.players!![player].score,
                                 color = Color.DarkGray,
                                 fontSize = 10.sp
                             )
@@ -105,16 +132,19 @@ fun ChoseWinnerScreen(navController: NavController, viewModel : GameViewModel, r
                         .fillMaxWidth()
                         .weight(1f)
                 ){
-                    Column(
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .weight(1f)
-                    ){
-                        Card(sentence = sentences[i], memeUrl = clickable, roomName = roomName, navController = navController, true)
-                        i++
-                    }
+                        Column(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .weight(1f)
+                        ){
+                            if (roomId != null) {
+                                sentences.getOrNull(i)?.let { Card(sentence = it, memeUrl = clickable, roomName = roomName, navController = navController, viewModel, userName, roomId, true) }
+                            }
+                            i++
+                        }
+
                     if(gameRoom.value?.players?.size!! > 4){
                         Column(
                             verticalArrangement = Arrangement.Center,
@@ -123,7 +153,9 @@ fun ChoseWinnerScreen(navController: NavController, viewModel : GameViewModel, r
                                 .fillMaxHeight()
                                 .weight(1f)
                         ){
-                            Card(sentence = sentences[i], memeUrl = clickable, roomName = roomName, navController = navController, true)
+                            if (roomId != null) {
+                                sentences.getOrNull(i)?.let { Card(sentence = it, memeUrl = clickable, roomName = roomName, navController = navController, viewModel, userName, roomId, true) }
+                            }
                             i++
                         }
                     }
@@ -146,7 +178,9 @@ fun ChoseWinnerScreen(navController: NavController, viewModel : GameViewModel, r
                             .fillMaxHeight()
                             .weight(1f)
                     ){
-                        Card(sentence = sentences[i], memeUrl = clickable, roomName = roomName, navController = navController, true)
+                        if (roomId != null) {
+                            sentences.getOrNull(i)?.let { Card(sentence = it, memeUrl = clickable, roomName = roomName, navController = navController, viewModel, userName, roomId, true) }
+                        }
                         i++
                     }
                 }
@@ -167,7 +201,9 @@ fun ChoseWinnerScreen(navController: NavController, viewModel : GameViewModel, r
                         .fillMaxHeight()
                         .weight(1f)
                 ){
-                    Card(sentence = sentences[i], memeUrl = clickable, roomName = roomName, navController = navController, true)
+                    if (roomId != null) {
+                        sentences.getOrNull(i)?.let { Card(sentence = it, memeUrl = clickable, roomName = roomName, navController = navController, viewModel, userName, roomId, true) }
+                    }
                     i++
                 }
                 if(gameRoom.value?.players?.size != null && gameRoom.value?.players?.size!! != 4){
@@ -178,7 +214,9 @@ fun ChoseWinnerScreen(navController: NavController, viewModel : GameViewModel, r
                             .fillMaxHeight()
                             .weight(1f)
                     ){
-                        Card(sentence = sentences[i], memeUrl = clickable, roomName = roomName, navController = navController, true)
+                        if (roomId != null) {
+                            sentences.getOrNull(i)?.let { Card(sentence = it, memeUrl = clickable, roomName = roomName, navController = navController, viewModel, userName, roomId, true) }
+                        }
                     }
                 }
             }

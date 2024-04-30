@@ -34,9 +34,11 @@ fun NavigationGraph(navController: NavHostController, viewModel: GameViewModel) 
             val userName = backStackEntry.arguments?.getString("userName") ?: ""
             FindGameScreen(navController, viewModel, userName)
         }
-        composable("Waiting Room/{roomName}") {backStackEntry ->
+        composable("Waiting Room/{roomName}/{userName}") {backStackEntry ->
             val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
-            WaitingRoomScreen(navController, roomName, viewModel)
+            val userName = backStackEntry.arguments?.getString("userName") ?: ""
+
+            WaitingRoomScreen(navController, roomName, userName, viewModel)
         }
         composable("Winner Screen/{roomName}") {backStackEntry ->
             val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
@@ -45,24 +47,35 @@ fun NavigationGraph(navController: NavHostController, viewModel: GameViewModel) 
         //Judge
         composable("Judge Screen/{roomName}") {backStackEntry ->
             val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
-            JudgeScreen(navController, viewModel, roomName)
+            val userName = backStackEntry.arguments?.getString("userName") ?: ""
+
+            JudgeScreen(navController, viewModel, roomName, userName)
         }
-        composable("Judge Wait/{roomName}") {backStackEntry ->
-            val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
-            JudgeWaitScreen(viewModel, roomName)
+        composable("Judge Wait/{roomName}/{imageURL}") {backStackEntry ->
+           val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
+            val imageURL = backStackEntry.arguments?.getString("imageURL") ?: ""
+            val userName = backStackEntry.arguments?.getString("userName") ?: ""
+
+            JudgeWaitScreen(viewModel, roomName, imageURL, userName)
         }
         //Player
-        composable("Player Screen/{roomName}") {backStackEntry ->
+        composable("Player Screen/{roomName}/{userName}") {backStackEntry ->
             val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
-            PlayerScreen(navController, viewModel, roomName)
+            val userName = backStackEntry.arguments?.getString("userName") ?: ""
+
+            PlayerScreen(navController, viewModel, roomName, userName)
         }
-        composable("Chose Winner/{roomName}") {backStackEntry ->
+        composable("Chose Winner/{roomName}/{userName}") {backStackEntry ->
             val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
-            ChoseWinnerScreen(navController, viewModel, roomName)
+            val userName = backStackEntry.arguments?.getString("userName") ?: ""
+
+            ChoseWinnerScreen(navController, viewModel, roomName, userName)
         }
-        composable("Show Winner/{roomName}") {backStackEntry ->
+        composable("Show Winner/{roomName}/{userName}") {backStackEntry ->
             val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
-            RoundWinnerScreen(navController, viewModel, roomName)
+            val userName = backStackEntry.arguments?.getString("userName") ?: ""
+
+            RoundWinnerScreen(navController, viewModel, roomName, userName)
         }
     }
 }

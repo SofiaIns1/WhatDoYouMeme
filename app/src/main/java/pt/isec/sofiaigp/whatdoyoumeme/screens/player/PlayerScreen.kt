@@ -1,5 +1,6 @@
 package pt.isec.sofiaigp.whatdoyoumeme.screens.player
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -46,16 +48,30 @@ import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.LightBlue
 import kotlin.random.Random
 
 @Composable
-fun PlayerScreen(navController: NavController, viewModel : GameViewModel, roomName : String) {
+fun PlayerScreen(navController: NavController, viewModel : GameViewModel, roomName : String, userName: String) {
     val gameRoom = viewModel.getGameRoomByName(roomName).observeAsState()
     val coroutineScope = rememberCoroutineScope()
 
     var memeUrl by remember { mutableStateOf("n") }
     var sentences by remember { mutableStateOf<List<String>>(emptyList()) }
 
+    val roomId = gameRoom.value?.roomId
+
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             sentences = viewModel.getRandomPlayableCards()
+        }
+    }
+
+    var score by remember {
+        mutableIntStateOf(0)
+    }
+
+    LaunchedEffect(roomId) {
+        if (roomId != null) {
+            viewModel.getPlayerScore(roomId, userName){playerScore ->
+                score = playerScore
+            }
         }
     }
 
@@ -77,7 +93,7 @@ fun PlayerScreen(navController: NavController, viewModel : GameViewModel, roomNa
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = "Score = " + 5 /*TODO: Change to judge's score when score is implemented*/,
+                    text = "Score = $score " ,
                     color = DarkBlue,
                     fontSize = 30.sp,
                     textAlign = TextAlign.Start
@@ -97,8 +113,8 @@ fun PlayerScreen(navController: NavController, viewModel : GameViewModel, roomNa
                             /*TODO: check if gameRoom.value?.players!![player] is not this screen's player*/
                             gameRoom.value?.players!![player].username?.let { it1 ->
                                 Text(
-                                    text = it1 /*TODO: instead of id, present the username*/
-                                        + " = score" /*TODO: when implemented, show the user score*/,
+                                    text = it1
+                                        + " = " + gameRoom.value?.players!![player].score,
                                     color = Color.DarkGray,
                                     fontSize = 10.sp
                                 )
@@ -122,7 +138,9 @@ fun PlayerScreen(navController: NavController, viewModel : GameViewModel, roomNa
                         .padding(10.dp)
                         .weight(1f)
                 ){
-                    Card(sentences.getOrNull(i) ?: "", memeUrl, roomName, navController)
+                    if (roomId != null) {
+                        Card(sentences.getOrNull(i) ?: "", memeUrl, roomName, navController, viewModel, userName, roomId)
+                    }
                     if(i < 2){
                         Spacer(modifier = Modifier.width(2.dp))
                     }
@@ -141,7 +159,9 @@ fun PlayerScreen(navController: NavController, viewModel : GameViewModel, roomNa
                     .padding(10.dp)
                     .weight(1f)
             ) {
-                Card(sentences.getOrNull(3) ?: "", memeUrl, roomName, navController)
+                if (roomId != null) {
+                    Card(sentences.getOrNull(3) ?: "", memeUrl, roomName, navController, viewModel, userName, roomId)
+                }
             }
             Column(
                 verticalArrangement = Arrangement.Center,
@@ -158,7 +178,9 @@ fun PlayerScreen(navController: NavController, viewModel : GameViewModel, roomNa
                     .padding(10.dp)
                     .weight(1f)
             ) {
-                Card(sentences.getOrNull(4) ?: "", memeUrl, roomName, navController)
+                if (roomId != null) {
+                    Card(sentences.getOrNull(4) ?: "", memeUrl, roomName, navController, viewModel, userName, roomId)
+                }
             }
         }
         Row(
@@ -174,7 +196,9 @@ fun PlayerScreen(navController: NavController, viewModel : GameViewModel, roomNa
                         .padding(10.dp)
                         .weight(1f)
                 ) {
-                    Card(sentences.getOrNull(i) ?: "", memeUrl, roomName, navController)
+                    if (roomId != null) {
+                        Card(sentences.getOrNull(i) ?: "", memeUrl, roomName, navController, viewModel, userName, roomId)
+                    }
                 }
             }
         }
@@ -189,7 +213,9 @@ fun PlayerScreen(navController: NavController, viewModel : GameViewModel, roomNa
                 fontSize = 10.sp
             ),
             onClick = { offset ->
-                /*TODO delete user from database*/
+                if (roomId != null) {
+                    viewModel.deletePlayer(roomId, userName)
+                }
                 navController.navigate("Home Screen")
             }
         )
@@ -197,7 +223,17 @@ fun PlayerScreen(navController: NavController, viewModel : GameViewModel, roomNa
 }
 
 @Composable
-fun Card(sentence : String, memeUrl : String, roomName: String, navController: NavController, winner : Boolean = false){
+fun Card(
+    sentence : String,
+    memeUrl : String,
+    roomName: String,
+    navController: NavController,
+    viewModel: GameViewModel,
+    userName: String,
+    roomId: String,
+    winner : Boolean = false,
+
+) {
     val angle = Random.nextInt(-5, 5)
     Column(
         verticalArrangement = Arrangement.Center,
@@ -210,16 +246,21 @@ fun Card(sentence : String, memeUrl : String, roomName: String, navController: N
             .background(DarkBlue, RoundedCornerShape(10.dp))
             .padding(1.dp)
             .clickable {
-            /*TODO:
+                viewModel.addSelectedCard(sentence, userName, roomId)
+                /*TODO:
                - verify if meme exists(string not blank), then navigate to next screen;
                - show chosen card to the judge
             */
-                if(winner)
+                if (winner){
+                    viewModel.updateScore(sentence, roomId)
                     navController.navigate("Show Winner/${roomName}")
-                else
-                    navController.navigate("Chose Winner/${roomName}")
+                }
+                else {
+                    navController.navigate("Chose Winner/${roomName}/$userName")
+                }
+
             }
-    ){
+    ) {
         Text(
             text = sentence,
             color = Color.White,
@@ -232,6 +273,7 @@ fun Card(sentence : String, memeUrl : String, roomName: String, navController: N
     }
 
 }
+
 
 @Composable
 fun MemeCard(memeUrl : String){

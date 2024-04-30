@@ -14,7 +14,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,8 +32,27 @@ import pt.isec.sofiaigp.whatdoyoumeme.data.GameViewModel
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.DarkBlue
 
 @Composable
-fun JudgeWaitScreen(viewModel : GameViewModel, roomName : String/*, imageUrl : String*/) {
+fun JudgeWaitScreen(
+    viewModel: GameViewModel,
+    roomName: String,
+    imageUrl: String,
+    userName: String
+) {
     val gameRoom = viewModel.getGameRoomByName(roomName).observeAsState()
+    val roomId = gameRoom.value?.roomId
+    val isJudge = roomId?.let { viewModel.isJudge(it) }
+
+    var score by remember {
+        mutableIntStateOf(0)
+    }
+
+    LaunchedEffect(roomId) {
+        if (roomId != null) {
+            viewModel.getPlayerScore(roomId, userName) { playerScore ->
+                score = playerScore
+            }
+        }
+    }
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -48,7 +72,7 @@ fun JudgeWaitScreen(viewModel : GameViewModel, roomName : String/*, imageUrl : S
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = "Score = " + 5 /*TODO: Change to judge's score when score is implemented*/,
+                    text = "Score = $score",
                     color = Color.White,
                     fontSize = 30.sp,
                     textAlign = TextAlign.Start
@@ -65,13 +89,15 @@ fun JudgeWaitScreen(viewModel : GameViewModel, roomName : String/*, imageUrl : S
                 ) {
                     gameRoom.value?.players?.size?.let {
                         items(it) { player ->
-                            /*TODO: check if gameRoom.value?.players!![player] is not the judge*/
-                            Text(
-                                text = gameRoom.value?.players!![player].username /*TODO: instead of id, present the username*/
-                                        + " = score" /*TODO: when implemented, show the user score*/,
-                                color = Color.White,
-                                fontSize = 10.sp
-                            )
+                            if (isJudge == false) {
+                                Text(
+                                    text = gameRoom.value?.players!![player].username
+                                            + " = " + gameRoom.value?.players!![player].score,
+                                    color = Color.White,
+                                    fontSize = 10.sp
+                                )
+                            }
+
                         }
                     }
                 }
@@ -84,7 +110,7 @@ fun JudgeWaitScreen(viewModel : GameViewModel, roomName : String/*, imageUrl : S
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
-        ){
+        ) {
             Text(
                 text = "Waiting for the other players...",
                 color = Color.White,

@@ -3,8 +3,7 @@ package pt.isec.sofiaigp.whatdoyoumeme.data
 data class GameRoom(
     val roomId: String? = null,
     val roomName: String? = null,
-    //val players: List<String>? = null, //ids of the players in the room
-    val players : List<User>? = null,
+    var players : List<User>? = null,
     val maxPlayers: Int? = null,
     var currentNumPlayers: Int? = null,
     val numRounds: Int? = null,
@@ -24,5 +23,6 @@ data class User(
     val id: String? = null,
     val username: String? = null,
     val score: Int? = null,
-    val role: String? = null
+    val role: String? = null,
+    val selectedCard: String?= null
 )

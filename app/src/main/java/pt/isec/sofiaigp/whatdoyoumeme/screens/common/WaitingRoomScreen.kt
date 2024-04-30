@@ -1,5 +1,6 @@
 package pt.isec.sofiaigp.whatdoyoumeme.screens.common
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,7 +33,7 @@ import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.DarkBlue
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.Lilac
 
 @Composable
-fun WaitingRoomScreen(navController: NavHostController, roomName: String, viewModel: GameViewModel) {
+fun WaitingRoomScreen(navController: NavHostController, roomName: String, userName: String, viewModel: GameViewModel) {
     val gameRoom = viewModel.getGameRoomByName(roomName).observeAsState()
     val aux = if(gameRoom.value?.maxPlayers != null && gameRoom.value?.maxPlayers!! <= 4){
         2
@@ -100,6 +101,7 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, viewMo
                 Row{
                     for(i in 0..<aux){
                         if(gameRoom.value?.players?.size != null && i < gameRoom.value?.players?.size!!){
+
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center,
@@ -111,7 +113,7 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, viewMo
                                 )
                                 gameRoom.value?.players?.get(i)?.username?.let {
                                     Text(
-                                        text = it, /*TODO search player DB to get the user name instead of its id*/
+                                        text = it,
                                         fontSize = 20.sp,
                                         color = Lilac
                                     )
@@ -148,7 +150,7 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, viewMo
                                     )
                                     gameRoom.value?.players?.get(i)?.username?.let {
                                         Text(
-                                            text = it,/*TODO search player DB to get the user name instead of its id*/
+                                            text = it,
                                             fontSize = 20.sp,
                                             color = Lilac
                                         )
@@ -178,9 +180,13 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, viewMo
 
                         Button(
                             onClick = {
-                                /*TODO Go to player screen*/
-                                      //navController.navigate("Judge Screen/${roomName}")
-                                      navController.navigate("Player Screen/${roomName}")
+                                gameRoom.value!!.roomId?.let { viewModel.selectJudge(it) }
+
+                                if(gameRoom.value!!.roomId?.let { viewModel.isJudge(it) } == true){
+                                    navController.navigate("Judge Screen/${roomName}/$userName")
+                                } else{
+                                    navController.navigate("Player Screen/${roomName}/$userName")
+                                }
                             },
                             modifier = Modifier
                                 .height(65.dp)

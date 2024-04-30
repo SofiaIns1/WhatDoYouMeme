@@ -229,7 +229,7 @@ fun FindGameScreen(navController: NavHostController, viewModel: GameViewModel, u
                 onClick = {
                     selectedGameRoomId.value.let { roomId ->
                         viewModel.joinGameRoom(userName, roomId, maxPlayers.intValue)
-                        navController.navigate("Waiting Room/${roomName}")
+                        navController.navigate("Waiting Room/${roomName}/$userName")
                     }
                 },
                 modifier = Modifier
