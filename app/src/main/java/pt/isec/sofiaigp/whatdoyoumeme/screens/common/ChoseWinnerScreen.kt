@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import pt.isec.sofiaigp.whatdoyoumeme.data.GameRoom
 import pt.isec.sofiaigp.whatdoyoumeme.data.GameViewModel
 import pt.isec.sofiaigp.whatdoyoumeme.screens.player.Card
 import pt.isec.sofiaigp.whatdoyoumeme.screens.player.MemeCard
@@ -33,25 +35,46 @@ import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.DarkBlue
 
 @Composable
 fun ChoseWinnerScreen(
-    navController: NavController, viewModel : GameViewModel, roomName : String, userName: String
+    navController: NavController, viewModel: GameViewModel, roomName: String, userName: String
 ) {
+    viewModel.getGameRoomByName(roomName)
 
-    val gameRoom = viewModel.getGameRoomByName(roomName).observeAsState()
-    val roomId = gameRoom.value?.roomId
-    var user = gameRoom.value?.roomId?.let { viewModel.isJudge(it) }
+    val gameRoom = viewModel.gameRoom.observeAsState()
+    val players = viewModel.players.observeAsState()
+
     var clickable = ""
-    var meme = "not empty"
+
+    val roomId = gameRoom.value?.roomId
+
+    if (roomId != null) {
+        if (viewModel.isJudge(roomId, userName)) {
+            clickable = "yes"
+        }
+
+    }
+
+//    var chosenMeme by remember {
+//        mutableStateOf("")
+//    }
+
+//    if (roomId != null) {
+//        viewModel.getChosenMeme(roomId) {
+//            chosenMeme = it
+//        }
+//    }
+   val chosenMeme = gameRoom.value?.chosenMeme.toString()
+
+
     var i = 0
 
     var sentences by remember { mutableStateOf(emptyList<String>()) }
 
-    LaunchedEffect(key1 = roomId) {
-        if (roomId != null) {
-            viewModel.getSelectedCards(roomId) { cards ->
-                sentences = cards
-            }
+    if (roomId != null) {
+        viewModel.getSelectedCards(roomId) { cards ->
+            sentences = cards
         }
     }
+
 
     var score by remember {
         mutableIntStateOf(0)
@@ -59,15 +82,12 @@ fun ChoseWinnerScreen(
 
     LaunchedEffect(roomId) {
         if (roomId != null) {
-            viewModel.getPlayerScore(roomId, userName){playerScore ->
+            viewModel.getPlayerScore(roomId, userName) { playerScore ->
                 score = playerScore
             }
         }
     }
 
-    if(user == true){
-        clickable = "yes"
-    }
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -102,12 +122,12 @@ fun ChoseWinnerScreen(
                 LazyColumn(
                     horizontalAlignment = Alignment.End
                 ) {
-                    gameRoom.value?.players?.size?.let {
+                    players.value?.size?.let {
                         items(it) { player ->
                             /*TODO: check if gameRoom.value?.players!![player] is not this screen's player*/
                             Text(
-                                text = gameRoom.value?.players!![player].username
-                                        + " = " + gameRoom.value?.players!![player].score,
+                                text = players.value!![player].username
+                                        + " = " + players.value!![player].score,
                                 color = Color.DarkGray,
                                 fontSize = 10.sp
                             )
@@ -123,68 +143,66 @@ fun ChoseWinnerScreen(
             modifier = Modifier
                 .padding(10.dp)
                 .fillMaxSize()
-        ){
-            if(gameRoom.value?.players?.size != null && gameRoom.value?.players?.size!! > 3){
+        ) {
+            if (players.value?.size != null && players.value?.size!! > 3) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                ){
-                        Column(
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .weight(1f)
-                        ){
-                            if (roomId != null) {
-                                sentences.getOrNull(i)?.let { Card(sentence = it, memeUrl = clickable, roomName = roomName, navController = navController, viewModel, userName, roomId, true) }
-                            }
-                            i++
-                        }
-
-                    if(gameRoom.value?.players?.size!! > 4){
-                        Column(
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .weight(1f)
-                        ){
-                            if (roomId != null) {
-                                sentences.getOrNull(i)?.let { Card(sentence = it, memeUrl = clickable, roomName = roomName, navController = navController, viewModel, userName, roomId, true) }
-                            }
-                            i++
-                        }
-                    }
-
-                }
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            ){
-                if(gameRoom.value?.players?.size != null && gameRoom.value?.players?.size!! % 2 == 0){
+                ) {
                     Column(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
                             .fillMaxHeight()
                             .weight(1f)
-                    ){
+                    ) {
                         if (roomId != null) {
-                            sentences.getOrNull(i)?.let { Card(sentence = it, memeUrl = clickable, roomName = roomName, navController = navController, viewModel, userName, roomId, true) }
+                            sentences.getOrNull(i)?.let {
+                                Card(
+                                    sentence = it,
+                                    memeUrl = clickable,
+                                    roomName = roomName,
+                                    navController = navController,
+                                    viewModel,
+                                    userName,
+                                    roomId,
+                                    true
+                                )
+                            }
                         }
                         i++
                     }
+
+                    if (players.value?.size!! > 4) {
+                        Column(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .weight(1f)
+                        ) {
+                            if (roomId != null) {
+                                sentences.getOrNull(i)?.let {
+                                    Card(
+                                        sentence = it,
+                                        memeUrl = clickable,
+                                        roomName = roomName,
+                                        navController = navController,
+                                        viewModel,
+                                        userName,
+                                        roomId,
+                                        true
+                                    )
+                                }
+                            }
+                            i++
+                        }
+                    }
+
                 }
-                MemeCard(memeUrl = meme)
             }
 
             Row(
@@ -193,29 +211,86 @@ fun ChoseWinnerScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-            ){
+            ) {
+                if (players.value?.size != null && players.value?.size!! % 2 == 0) {
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(1f)
+                    ) {
+                        if (roomId != null) {
+                            sentences.getOrNull(i)?.let {
+                                Card(
+                                    sentence = it,
+                                    memeUrl = clickable,
+                                    roomName = roomName,
+                                    navController = navController,
+                                    viewModel,
+                                    userName,
+                                    roomId,
+                                    true
+                                )
+                            }
+                        }
+                        i++
+                    }
+                }
+                MemeCard(memeUrl = chosenMeme)
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
                 Column(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .fillMaxHeight()
                         .weight(1f)
-                ){
+                ) {
                     if (roomId != null) {
-                        sentences.getOrNull(i)?.let { Card(sentence = it, memeUrl = clickable, roomName = roomName, navController = navController, viewModel, userName, roomId, true) }
+                        sentences.getOrNull(i)?.let {
+                            Card(
+                                sentence = it,
+                                memeUrl = clickable,
+                                roomName = roomName,
+                                navController = navController,
+                                viewModel,
+                                userName,
+                                roomId,
+                                true
+                            )
+                        }
                     }
                     i++
                 }
-                if(gameRoom.value?.players?.size != null && gameRoom.value?.players?.size!! != 4){
+                if (players.value?.size != null && players.value?.size!! != 4) {
                     Column(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
                             .fillMaxHeight()
                             .weight(1f)
-                    ){
+                    ) {
                         if (roomId != null) {
-                            sentences.getOrNull(i)?.let { Card(sentence = it, memeUrl = clickable, roomName = roomName, navController = navController, viewModel, userName, roomId, true) }
+                            sentences.getOrNull(i)?.let {
+                                Card(
+                                    sentence = it,
+                                    memeUrl = clickable,
+                                    roomName = roomName,
+                                    navController = navController,
+                                    viewModel,
+                                    userName,
+                                    roomId,
+                                    true
+                                )
+                            }
                         }
                     }
                 }

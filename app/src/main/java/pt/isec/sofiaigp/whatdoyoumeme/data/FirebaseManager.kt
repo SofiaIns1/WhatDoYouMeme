@@ -1,13 +1,15 @@
 package pt.isec.sofiaigp.whatdoyoumeme.data
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.toObject
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.MetadataChanges
 import kotlinx.coroutines.tasks.await
+import kotlin.properties.Delegates
 
 class FirebaseManager() {
 
@@ -31,7 +33,7 @@ class FirebaseManager() {
                         "playerName" to playerName,
                         "score" to score,
                         "role" to role,
-                        "selectedCard" to selectedCard
+                        "selectedCard" to selectedCard,
                     )
 
                     db.collection("players")
@@ -59,8 +61,9 @@ class FirebaseManager() {
         maxPlayers: Int,
         numRounds: Int,
         playerName: String,
+        chosenMeme: String? = "",
         onSuccess: () -> Unit,
-        onFailure: () -> Unit
+        onFailure: () -> Unit,
     ) {
 
         db.collection("game_rooms")
@@ -70,9 +73,9 @@ class FirebaseManager() {
                 if (documents.isEmpty) {
                     val gameRoom = hashMapOf(
                         "roomName" to roomName,
-                        "players" to emptyList<User>(),
                         "maxPlayers" to maxPlayers,
-                        "numRounds" to numRounds
+                        "numRounds" to numRounds,
+                        "chosenMeme" to chosenMeme
                     )
 
                     db.collection("game_rooms")
@@ -93,34 +96,39 @@ class FirebaseManager() {
 
     }
 
-    fun joinGameRoom(playerName: String, roomId: String, maxPlayers: Int) {
+
+    fun joinGameRoom(
+        playerName: String,
+        roomId: String,
+        maxPlayers: Int
+    ) {
         val playersCollection = db.collection("players")
 
         playersCollection.whereEqualTo("playerName", playerName)
             .get()
             .addOnSuccessListener { querySnapshot ->
                 if (!querySnapshot.isEmpty) {
-                    for (document in querySnapshot.documents) {
-                        val playerId = document.id
-                        val roomRef =
-                            db.collection("game_rooms").document(roomId).collection("players")
+                    if (querySnapshot.size() < maxPlayers) {
+                        for (document in querySnapshot.documents) {
+                            val playerId = document.id
+                            val roomRef = db.collection("game_rooms").document(roomId)
+                                .collection("players").document(playerId)
 
-                        val p = querySnapshot.documents
-                        if (p.size < maxPlayers) {
-                            roomRef.document(playerId).set(document.data!!)
+
+                            roomRef.set(document.data!!)
                                 .addOnSuccessListener {
                                     Log.d(
                                         "TAG",
                                         "Player $playerName added to game room $roomId"
                                     )
+
                                 }
                                 .addOnFailureListener { e ->
                                     Log.e("TAG", "Error adding player to game room: $e")
                                 }
-                        } else {
-                            Log.d("TAG", "Maximum players reached in game room $roomId")
-
                         }
+                    } else {
+                        Log.d("TAG", "Maximum players reached in game room $roomId")
                     }
                 } else {
                     Log.d("TAG", "Player $playerName not found")
@@ -129,9 +137,7 @@ class FirebaseManager() {
             .addOnFailureListener { e ->
                 Log.e("TAG", "Error querying players: $e")
             }
-
     }
-
 
     fun getGameRoomsList(onUpdate: (List<GameRoom>) -> Unit) {
         val gameRoomsCollection = db.collection("game_rooms")
@@ -143,113 +149,266 @@ class FirebaseManager() {
             }
             if (snapshot != null) {
                 val gameRooms = mutableListOf<GameRoom>()
-                val userMap = mutableMapOf<String, List<User>>()
 
                 for (document in snapshot.documents) {
                     val roomId = document.id
                     val roomName = document.getString("roomName")
                     val maxPlayers = document.getLong("maxPlayers")?.toInt()
                     val numRounds = document.getLong("numRounds")?.toInt()
+                    val winner = document.getString("winner")
+                    val start = document.getBoolean("start")
+                    val chosenMeme = document.getString("chosenMeme")
 
-                    val gameRoom = GameRoom(
-                        roomId,
-                        roomName,
-                        emptyList(),
-                        maxPlayers,
-                        0,
-                        numRounds
-                    )
-                    gameRooms.add(gameRoom)
+                    getPlayersByGameRoomId(roomId,
+                        onSuccess = { players ->
+                            val currentNumPlayers = players.size
 
-                    val playersRef = document.reference.collection("players")
-                    playersRef.get().addOnSuccessListener { playerSnapshot ->
-                        val players = mutableListOf<User>()
-                        for (playerDocument in playerSnapshot.documents) {
-                            val playerId = playerDocument.id
-                            val username = playerDocument.getString("playerName")
-                            val score = playerDocument.getLong("score")?.toInt()
-                            val role = playerDocument.getString("role")
-                            val selectedCard = playerDocument.getString("selectedCard")
-                            val user = User(playerId, username, score, role, selectedCard)
-                            players.add(user)
-                        }
-                        userMap[roomId] = players
+                            val gameRoom = GameRoom(
+                                roomId,
+                                roomName,
+                                maxPlayers,
+                                currentNumPlayers,
+                                numRounds,
+                                winner,
+                                start,
+                                chosenMeme
+                            )
 
-                        if (userMap.size == snapshot.documents.size) {
-                            for (room in gameRooms) {
-                                room.players = userMap[room.roomId]
-                                room.currentNumPlayers = room.players?.size ?: 0
+                            gameRooms.add(gameRoom)
+
+                            if (gameRooms.size == snapshot.documents.size) {
+                                onUpdate(gameRooms)
                             }
-                            onUpdate(gameRooms)
+
+                        },
+                        onFailure = { e ->
+                            Log.e(
+                                "TAG", "Error getting players for room $roomName",
+                                e as Throwable?
+                            )
                         }
-                    }.addOnFailureListener { e ->
-                        Log.e("TAG", "Error getting players for room $roomId", e)
-                    }
+                    )
+
+
                 }
+
+                if (gameRooms.isEmpty()) {
+                    onUpdate(emptyList())
+                    return@addSnapshotListener
+                }
+
             }
         }
     }
 
+    fun getGameRoomByName(roomName: String, onUpdate: (GameRoom, List<User>) -> Unit) {
 
-    fun getGameRoomByName(roomName: String): MutableLiveData<GameRoom?> {
-        val gameRoomLiveData = MutableLiveData<GameRoom?>()
         db.collection("game_rooms")
             .whereEqualTo("roomName", roomName)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                if (!querySnapshot.isEmpty) {
-                    for (document in querySnapshot.documents) {
-                        val roomId = document.id
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Log.w("TAG", "Listen failed.", e)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    for (document in snapshot.documents) {
+                        var roomId = document.id
                         val maxPlayers = document.getLong("maxPlayers")?.toInt()
                         val numRounds = document.getLong("numRounds")?.toInt()
+                        val winner = document.getString("winner")
+                        val start = document.getBoolean("start")
+                        val chosenMeme = document.getString("chosenMeme")
 
-                        val gameRoom = GameRoom(
+                        getPlayersByGameRoomId(
                             roomId,
-                            roomName,
-                            emptyList(),
-                            maxPlayers,
-                            0,
-                            numRounds
+                            onSuccess = { players ->
+                                val gameRoom =
+                                    GameRoom(
+                                        roomId,
+                                        roomName,
+                                        maxPlayers,
+                                        players.size,
+                                        numRounds,
+                                        winner,
+                                        start,
+                                        chosenMeme
+                                    )
+
+                                val previousGameRoom =
+                                    PreviousGameRoomStateManager.getPreviousGameRoomState(roomId)
+                                if (gameRoom != previousGameRoom) {
+                                    saveGameRoomToFirestore(gameRoom)
+                                    updatePlayersInFirestore(roomId, players)
+                                    onUpdate(gameRoom, players)
+                                }
+
+                                PreviousGameRoomStateManager.updatePreviousGameRoomState(
+                                    roomId,
+                                    gameRoom
+                                )
+
+
+                            },
+                            onFailure = {
+                                Log.e("TAG", "Error getting players for game room $roomName")
+                            }
                         )
 
-                        val playersRef = document.reference.collection("players")
-                        playersRef.get().addOnSuccessListener { playerSnapshot ->
-                            val players = mutableListOf<User>()
-                            for (playerDocument in playerSnapshot.documents) {
-                                val playerId = playerDocument.id
-                                val username = playerDocument.getString("playerName")
-                                val score = playerDocument.getLong("score")?.toInt()
-                                val role = playerDocument.getString("role")
-                                val selectedCard = playerDocument.getString("selectedCard")
-                                val user = User(playerId, username, score, role, selectedCard)
-                                players.add(user)
-                            }
-                            gameRoom.players = players
-                            gameRoom.currentNumPlayers = players.size
-
-                            gameRoomLiveData.value = gameRoom
-                        }.addOnFailureListener { e ->
-                            Log.e("TAG", "Error getting players for room $roomName", e)
-                        }
                     }
+
+
                 } else {
-                    Log.d("TAG", "Game Room not found")
-                    gameRoomLiveData.value = null
+                    Log.e("TAG", "Error getting game room")
                 }
             }
-            .addOnFailureListener { e ->
-                Log.e("TAG", "Error getting game room: $e")
-                gameRoomLiveData.value = null
-            }
-        return gameRoomLiveData
     }
 
+    private fun getPlayersByGameRoomId(
+        roomId: String,
+        onSuccess: (List<User>) -> Unit,
+        onFailure: (Any?) -> Unit
+    ) {
+        val playersRef = db.collection("game_rooms").document(roomId).collection("players")
+        playersRef.addSnapshotListener { playerSnapshot, e ->
+
+            if (e != null) {
+                Log.w("TAG", "Listen failed.", e)
+                return@addSnapshotListener
+            }
+            if (playerSnapshot != null) {
+                val players = mutableListOf<User>()
+                for (playerDocument in playerSnapshot.documents) {
+                    val playerId = playerDocument.id
+                    val username = playerDocument.getString("playerName")
+                    val score = playerDocument.getLong("score")?.toInt()
+                    val role = playerDocument.getString("role")
+                    val selectedCard = playerDocument.getString("selectedCard")
+                    val user = User(playerId, username, score, role, selectedCard)
+                    players.add(user)
+                }
+                onSuccess(players)
+            }
+
+        }
+
+    }
+
+
+    private fun saveGameRoomToFirestore(gameRoom: GameRoom) {
+        gameRoom.roomId?.let {
+            db.collection("game_rooms")
+                .document(it)
+                .update(
+                    mapOf(
+                        "maxPlayers" to gameRoom.maxPlayers,
+                        "currentNumPlayers" to gameRoom.currentNumPlayers,
+                        "numRounds" to gameRoom.numRounds,
+                        "winner" to gameRoom.winner,
+                        "start" to gameRoom.start,
+                        "chosenMeme" to gameRoom.chosenMeme
+                    )
+                )
+                .addOnSuccessListener {
+                    Log.d("TAG", "Game Room updated successfully")
+                }
+                .addOnFailureListener { e ->
+                    Log.e("TAG", "Error updating game room", e)
+                }
+        }
+    }
+
+    private fun updatePlayersInFirestore(roomId: String, players: List<User>) {
+        val playersRef = db.collection("game_rooms").document(roomId).collection("players")
+        for (player in players) {
+            player.id?.let {
+                playersRef.document(it)
+                    .update(
+                        mapOf(
+                            "score" to player.score,
+                            "role" to player.role,
+                            "selectedCard" to player.selectedCard
+                        )
+                    )
+                    .addOnSuccessListener {
+                        Log.d("TAG", "Player ${player.username} updated successfully")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("TAG", "Error updating player ${player.username}", e)
+                    }
+            }
+        }
+    }
+
+    fun hasGameStarted(roomId: String, onUpdate: (GameRoom) -> Unit) {
+        db.collection("game_rooms").document(roomId)
+            .addSnapshotListener(MetadataChanges.INCLUDE) { snapshot, e ->
+                if (e != null) {
+                    Log.e("TAG", "Listen failed", e)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null && snapshot.exists()) {
+                    val isStart = snapshot.getBoolean("start") ?: false
+                    if (isStart == true) {
+                        val roomName = snapshot.getString("roomName")
+                        val maxPlayers = snapshot.getLong("maxPlayers")?.toInt()
+                        val numRounds = snapshot.getLong("numRounds")?.toInt()
+                        val currentNumPlayers = snapshot.getLong("currentNumPlayers")?.toInt()
+                        val winner = snapshot.getString("winner")
+                        val start = snapshot.getBoolean("start")
+                        val chosenMeme = snapshot.getString("chosenMeme")
+                        onUpdate(
+                            GameRoom(
+                                roomId,
+                                roomName,
+                                maxPlayers,
+                                currentNumPlayers,
+                                numRounds,
+                                winner,
+                                start,
+                                chosenMeme
+                            )
+                        )
+                    }
+
+                }
+            }
+    }
+
+
+    fun startGame(roomId: String, onSuccess: () -> Unit) {
+        db.collection("game_rooms").document(roomId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val isStarted = snapshot.getBoolean("start") ?: false
+                if (!isStarted) {
+                    db.collection("game_rooms").document(roomId)
+                        .update("start", true)
+                        .addOnSuccessListener {
+                            Log.d("TAG", "State updated successfully for game room $roomId")
+
+                        }.addOnFailureListener {
+                            Log.e("TAG", "Failed to updating game room's state")
+                        }
+
+                } else {
+                    Log.d("TAG", "Game for game room $roomId is already started")
+                }
+
+
+            }
+
+    }
 
     suspend fun getRandomMemeImages(): List<String> {
         val imagesURL = mutableListOf<String>()
 
         try {
-            val querySnapshot = db.collection("memes").get().await()
+            val querySnapshot = db.collection("memes")
+                .limit(6)
+                .get()
+                .await()
 
             if (querySnapshot.size() < 6) {
                 throw Exception("Not enough images on firestore")
@@ -297,7 +456,7 @@ class FirebaseManager() {
         return sentences
     }
 
-    fun selectJudge(roomId: String) {
+    fun selectJudge(roomId: String, onUpdate: (List<User>) -> Unit) {
         val roomRef = db.collection("game_rooms").document(roomId)
 
         roomRef.collection("players")
@@ -317,6 +476,14 @@ class FirebaseManager() {
                         .update("role", "judge")
                         .addOnSuccessListener {
                             Log.d("TAG", "Player $judgePlayerId selected as judge of the game")
+
+                            getPlayersByGameRoomId(roomId, onSuccess = { players ->
+                                updatePlayersInFirestore(roomId, players)
+                                onUpdate(players)
+
+                            },
+                                onFailure = {})
+
                         }
                         .addOnFailureListener { e ->
                             Log.e("TAG", "Error updating the judge role", e)
@@ -329,25 +496,32 @@ class FirebaseManager() {
             }
     }
 
-    fun isJudge(roomId: String): Boolean {
-        var isJudge = false
-        val roomRef = db.collection("game_rooms").document(roomId)
 
-        roomRef.collection("players")
-            .get()
-            .addOnSuccessListener { playerSnapshot ->
-                for (playerDocument in playerSnapshot.documents) {
-                    val role = playerDocument.getString("role")
-                    if (role == "judge") {
-                        isJudge = true
-                        break
-                    }
-                }
-            }.addOnFailureListener { e ->
-                Log.e("TAG", "Error getting players from room $roomId", e)
-            }
-        return isJudge
-    }
+//    fun isJudge(roomId: String, callback: (Boolean) -> Unit) {
+//        val roomRef = db.collection("game_rooms").document(roomId)
+//
+//        roomRef.collection("players")
+//            .addSnapshotListener { snapshot, e ->
+//                if (e != null) {
+//                    Log.w("TAG", "Listen failed", e)
+//                    callback(false)
+//                    return@addSnapshotListener
+//                }
+//
+//                var isJudge = false
+//                if (snapshot != null) {
+//                    for (document in snapshot.documents) {
+//                        val role = document.getString("role")
+//                        if (role == "judge") {
+//                            isJudge = true
+//                            break
+//                        }
+//                    }
+//                }
+//                callback(isJudge)
+//            }
+//
+//    }
 
     fun addSelectedCard(card: String, playerName: String, roomId: String) {
         val roomRef = db.collection("game_rooms").document(roomId)
@@ -373,6 +547,140 @@ class FirebaseManager() {
                 Log.e("TAG", "Error fetching player document for $playerName", e)
             }
 
+    }
+
+    fun isCardSelected(playerName: String, roomId: String, callback: (Boolean) -> Unit) {
+        db.collection("game_rooms").document(roomId)
+            .collection("players")
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Log.w("TAG", "Listen failed.", e)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    for (playerDocument in snapshot.documents) {
+                        val name = playerDocument.getString("playerName")
+                        if (name == playerName) {
+                            val selectedCard = playerDocument.getString("selectedCard")
+                            if(selectedCard != "")
+                                callback(true)
+                            break
+                        }
+                    }
+                }
+            }
+    }
+
+
+    fun getSelectedCards(roomId: String, onComplete: (List<String>) -> Unit) {
+
+        val roomRef = db.collection("game_rooms").document(roomId)
+
+        roomRef.collection("players")
+            .addSnapshotListener { playerSnapshot, e ->
+                if (e != null) {
+                    Log.w("TAG", "listen failed", e)
+                    return@addSnapshotListener
+                }
+
+                if (playerSnapshot != null) {
+                    val selectedCards = mutableListOf<String>()
+                    for (playerDocument in playerSnapshot.documents) {
+                        val selectedCard = playerDocument.getString("selectedCard")
+                        if (!selectedCard.isNullOrEmpty()) {
+                            selectedCards.add(selectedCard)
+                        }
+                    }
+                    onComplete(selectedCards)
+                }
+
+
+//        val roomRef = db.collection("game_rooms").document(roomId)
+//
+//        roomRef.collection("players")
+//            .get()
+//            .addOnSuccessListener { playerSnapshot ->
+//                val selectedCards = mutableListOf<String>()
+//                for (playerDocument in playerSnapshot.documents) {
+//                    val selectedCard = playerDocument.getString("selectedCard")
+//                    if (!selectedCard.isNullOrEmpty()) {
+//                        selectedCards.add(selectedCard)
+//                    }
+//                }
+//                onComplete(selectedCards)
+//
+//            }.addOnFailureListener { e ->
+//                Log.e("TAG", "Error getting selected cards", e)
+//                onComplete(emptyList())
+//            }
+            }
+    }
+
+//    fun allCardsSelected(roomId: String, callback: () -> Unit){
+//
+//        db.collection("game_rooms").document(roomId)
+//            .collection("players")
+//            .addSnapshotListener{snapshot, e ->
+//                if(e != null){
+//                    Log.w("TAG", "listen failed", e)
+//                    return@addSnapshotListener
+//                }
+//
+//                if(snapshot != null){
+//                    for(player in snapshot.documents){
+//                        if (player.getString("role") != "judge"){
+//                            if(player.getString("selectedCard") != ""){
+//                                callback()
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//    }
+
+    fun addChosenMeme(chosenMeme: String, roomId: String) {
+        db.collection("game_rooms").document(roomId)
+            .update("chosenMeme", chosenMeme)
+            .addOnSuccessListener {
+                Log.d("TAG", "Chosen meme updated for room $roomId")
+
+            }
+            .addOnFailureListener { e ->
+                Log.e("TAG", "Error updating chosen meme for room $roomId", e)
+            }
+    }
+
+    fun memeUpdated(roomId: String, callback: () -> Unit) {
+        db.collection("game_rooms")
+            .document(roomId)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Log.w("TAG", "listen failed", e)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null && snapshot.exists()) {
+                    val chosenMeme = snapshot.getString("chosenMeme")
+                    if (chosenMeme != "") {
+                        callback()
+                    }
+                }
+            }
+    }
+
+    fun getChosenMeme(roomId: String, onComplete: (String) -> Unit) {
+        db.collection("game_rooms").document(roomId)
+            .addSnapshotListener { snapshot, e ->
+                if (snapshot != null) {
+                    val chosenMeme = snapshot.getString("chosenMeme")
+                    if (chosenMeme != null) {
+                        onComplete(chosenMeme)
+                        return@addSnapshotListener
+                    }
+                }
+                //onComplete("")
+            }
     }
 
     fun updateScore(chosenCard: String, roomId: String) {
@@ -413,48 +721,25 @@ class FirebaseManager() {
             }
     }
 
-    fun getSelectedCards(roomId: String, onComplete: (List<String>) -> Unit) {
 
-        val roomRef = db.collection("game_rooms").document(roomId)
-
-        roomRef.collection("players")
-            .get()
-            .addOnSuccessListener { playerSnapshot ->
-                val selectedCards = mutableListOf<String>()
-                for (playerDocument in playerSnapshot.documents) {
-                    val selectedCard = playerDocument.getString("selectedCard")
-                    if (!selectedCard.isNullOrEmpty()) {
-                        selectedCards.add(selectedCard)
-                    }
-                }
-                onComplete(selectedCards)
-
-            }.addOnFailureListener { e ->
-                Log.e("TAG", "Error getting selected cards", e)
-                onComplete(emptyList())
-            }
-    }
-
-    fun getPlayerScore(roomId: String, playerName: String, onComplete: (Int) -> Unit){
+    fun getPlayerScore(roomId: String, playerName: String, onComplete: (Int) -> Unit) {
         val roomRef = db.collection("game_rooms").document(roomId)
 
         val players = roomRef.collection("players")
 
         players
             .whereEqualTo("playerName", playerName)
-            .get()
-            .addOnSuccessListener { playerSnapshot ->
-                for (playerDocument in playerSnapshot.documents) {
-                    val score = playerDocument.getString("score")?.toInt() ?: 0
-                    onComplete(score)
-                    return@addOnSuccessListener
+            .addSnapshotListener { playerSnapshot, e ->
+                if (playerSnapshot != null) {
+                    for (playerDocument in playerSnapshot.documents) {
+                        val score = playerDocument.getLong("score")?.toInt() ?: 0
+                        onComplete(score)
+                        return@addSnapshotListener
+                    }
                 }
-                onComplete(0)
+                // onComplete(0)
             }
-            .addOnFailureListener { e ->
-                Log.e("TAG", "Error getting players", e)
-                onComplete(0)
-            }
+
     }
 
     fun deletePlayer(roomId: String, playerName: String) {
@@ -484,5 +769,4 @@ class FirebaseManager() {
                 Log.e("TAG", "Error getting players", e)
             }
     }
-
 }

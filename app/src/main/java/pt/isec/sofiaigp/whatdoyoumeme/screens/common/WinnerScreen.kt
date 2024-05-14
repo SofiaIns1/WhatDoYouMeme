@@ -14,7 +14,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import pt.isec.sofiaigp.whatdoyoumeme.R
+import pt.isec.sofiaigp.whatdoyoumeme.data.GameRoom
 import pt.isec.sofiaigp.whatdoyoumeme.data.GameViewModel
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.DarkBlue
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.LightBlue
@@ -34,7 +38,10 @@ import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.Lilac
 @Composable
 fun WinnerScreen(navController: NavHostController, viewModel: GameViewModel, roomName: String) {
 
-    val gameRoom = viewModel.getGameRoomByName(roomName).observeAsState()
+    viewModel.getGameRoomByName(roomName)
+
+    val gameRoom = viewModel.gameRoom.observeAsState()
+    val players = viewModel.players.observeAsState()
 
     gameRoom.value?.winner = "Maria" /*TODO: When winner implemented, remove*/
 
@@ -88,11 +95,11 @@ fun WinnerScreen(navController: NavHostController, viewModel: GameViewModel, roo
             LazyColumn (
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                gameRoom.value?.players?.size?.let {
+                players.value?.size?.let {
                     items(it){ player ->
-                        if(gameRoom.value?.players!![player].username != gameRoom.value?.winner){
+                        if( players.value!![player].username != gameRoom.value?.winner){
                             Text(
-                                text = gameRoom.value?.players!![player].username + " = score", /*TODO get player name instead of id and score*/
+                                text =  players.value!![player].username + " = score", /*TODO get player name instead of id and score*/
                                 color = Color.LightGray,
                                 fontSize = 33.sp,
                             )

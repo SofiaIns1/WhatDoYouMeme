@@ -16,7 +16,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,23 +29,46 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Observer
 import androidx.navigation.NavHostController
 import pt.isec.sofiaigp.whatdoyoumeme.R
 import pt.isec.sofiaigp.whatdoyoumeme.components.GoBackBarWhite
+import pt.isec.sofiaigp.whatdoyoumeme.data.GameRoom
 import pt.isec.sofiaigp.whatdoyoumeme.data.GameViewModel
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.DarkBlue
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.Lilac
 
 @Composable
-fun WaitingRoomScreen(navController: NavHostController, roomName: String, userName: String, viewModel: GameViewModel) {
-    val gameRoom = viewModel.getGameRoomByName(roomName).observeAsState()
-    val aux = if(gameRoom.value?.maxPlayers != null && gameRoom.value?.maxPlayers!! <= 4){
+fun WaitingRoomScreen(
+    navController: NavHostController,
+    roomName: String,
+    userName: String,
+    viewModel: GameViewModel
+) {
+    viewModel.getGameRoomByName(roomName)
+    val gameRoom = viewModel.gameRoom.observeAsState()
+    val players = viewModel.players.observeAsState()
+
+    val roomId = viewModel.gameRoom.value?.roomId
+
+    if (roomId != null) {
+        viewModel.hasGameStarted(roomId) {
+            if (viewModel.isJudge(roomId, userName)) {
+                navController.navigate("Judge Screen/${roomName}/$userName")
+            } else
+                navController.navigate("Player Screen/${roomName}/$userName")
+
+        }
+    }
+
+
+    val aux = if (gameRoom.value?.maxPlayers != null && gameRoom.value?.maxPlayers!! <= 4) {
         2
-    } else{
+    } else {
         3
     }
 
-    Column (
+    Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
@@ -73,17 +100,17 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, userNa
             )
 
             Spacer(modifier = Modifier.height(10.dp))
-            
-            Column (
+
+            Column(
                 horizontalAlignment = Alignment.CenterHorizontally
-            ){
+            ) {
                 Text(
                     text = "ROOM: " + gameRoom.value?.roomName,
                     color = Lilac,
                     fontSize = 24.sp
                 )
                 Text(
-                    text = "PLAYERS: " + gameRoom.value?.players?.size.toString() + "/" + gameRoom.value?.maxPlayers,
+                    text = "PLAYERS: " + players.value?.size.toString() + "/" + gameRoom.value?.maxPlayers,
                     color = Lilac,
                     fontSize = 24.sp
                 )
@@ -98,20 +125,20 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, userNa
                     .fillMaxSize()
                     .padding(10.dp)
             ) {
-                Row{
-                    for(i in 0..<aux){
-                        if(gameRoom.value?.players?.size != null && i < gameRoom.value?.players?.size!!){
+                Row {
+                    for (i in 0..<aux) {
+                        if (players.value?.size != null && i < players.value?.size!!) {
 
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center,
-                            ){
+                            ) {
                                 Icon(
                                     imageVector = ImageVector.vectorResource(id = R.drawable.user),
                                     contentDescription = "Player",
                                     tint = Lilac
                                 )
-                                gameRoom.value?.players?.get(i)?.username?.let {
+                                players.value?.get(i)?.username?.let {
                                     Text(
                                         text = it,
                                         fontSize = 20.sp,
@@ -119,15 +146,14 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, userNa
                                     )
                                 }
                             }
-                        }
-                        else{
+                        } else {
                             Icon(
                                 imageVector = ImageVector.vectorResource(id = R.drawable.waiting),
                                 contentDescription = "Wait",
                                 tint = Color.White
                             )
                         }
-                        if(i < aux - 1){
+                        if (i < aux - 1) {
                             Spacer(modifier = Modifier.width(10.dp))
                         }
                     }
@@ -135,20 +161,20 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, userNa
 
                 Spacer(modifier = Modifier.height(15.dp))
 
-                Row{
-                    if(gameRoom.value?.maxPlayers != null && gameRoom.value?.players?.size != null){
-                        for(i in aux..<gameRoom.value?.maxPlayers!!){
-                            if(i < gameRoom.value?.players?.size!!){
+                Row {
+                    if (gameRoom.value?.maxPlayers != null && players.value?.size != null) {
+                        for (i in aux..<gameRoom.value?.maxPlayers!!) {
+                            if (i < players.value?.size!!) {
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.Center,
-                                ){
+                                ) {
                                     Icon(
                                         imageVector = ImageVector.vectorResource(id = R.drawable.user),
                                         contentDescription = "Player",
                                         tint = Lilac
                                     )
-                                    gameRoom.value?.players?.get(i)?.username?.let {
+                                    players.value?.get(i)?.username?.let {
                                         Text(
                                             text = it,
                                             fontSize = 20.sp,
@@ -157,15 +183,14 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, userNa
                                     }
                                 }
 
-                            }
-                            else{
+                            } else {
                                 Icon(
                                     imageVector = ImageVector.vectorResource(id = R.drawable.waiting),
                                     contentDescription = "Wait",
                                     tint = Color.White
                                 )
                             }
-                            if(i < gameRoom.value?.maxPlayers!! - 1){
+                            if (i < gameRoom.value?.maxPlayers!! - 1) {
                                 Spacer(modifier = Modifier.width(10.dp))
                             }
                         }
@@ -174,19 +199,22 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, userNa
                 }
 
 
-                if(gameRoom.value?.maxPlayers != null && gameRoom.value?.players?.size != null) {
-                    if (gameRoom.value?.players?.size == gameRoom.value?.maxPlayers) {
+                if (gameRoom.value?.maxPlayers != null && players.value?.size != null) {
+                    if (players.value?.size == gameRoom.value?.maxPlayers) {
                         Spacer(modifier = Modifier.height(25.dp))
 
                         Button(
                             onClick = {
                                 gameRoom.value!!.roomId?.let { viewModel.selectJudge(it) }
 
-                                if(gameRoom.value!!.roomId?.let { viewModel.isJudge(it) } == true){
-                                    navController.navigate("Judge Screen/${roomName}/$userName")
-                                } else{
-                                    navController.navigate("Player Screen/${roomName}/$userName")
+                                gameRoom.value?.roomId.let {
+                                    if (it != null) {
+                                        viewModel.startGame(it) {
+                                            Log.d("TAG", "Game Started")
+                                        }
+                                    }
                                 }
+
                             },
                             modifier = Modifier
                                 .height(65.dp)
@@ -207,4 +235,5 @@ fun WaitingRoomScreen(navController: NavHostController, roomName: String, userNa
             }
         }
     }
+
 }

@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -37,13 +38,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import kotlinx.coroutines.launch
+import pt.isec.sofiaigp.whatdoyoumeme.data.GameRoom
 import pt.isec.sofiaigp.whatdoyoumeme.data.GameViewModel
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.DarkBlue
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.LightBlue
+import java.net.URLEncoder
 import kotlin.random.Random
 
 @Composable
@@ -53,9 +57,29 @@ fun JudgeScreen(
     roomName: String,
     userName: String
 ) {
-    val gameRoom = viewModel.getGameRoomByName(roomName).observeAsState()
+    viewModel.getGameRoomByName(roomName)
+
+    val gameRoom = viewModel.gameRoom.observeAsState()
+    val players = viewModel.players.observeAsState()
+
+
     val roomId = gameRoom.value?.roomId
-    val isJudge = roomId?.let { viewModel.isJudge(it) }
+    var isJudge by remember { mutableStateOf(false) }
+
+    if (roomId != null) {
+        viewModel.hasGameStarted(roomId) {
+            if (viewModel.isJudge(roomId, userName)) {
+                isJudge = true
+            }
+        }
+    }
+
+    if (roomId != null) {
+        viewModel.memeUpdated(roomId){
+            navController.navigate("Judge Wait/${roomName}/$userName")
+        }
+    }
+
     val coroutineScope = rememberCoroutineScope()
     var imagesURL by remember { mutableStateOf<List<String>>(emptyList()) }
 
@@ -110,16 +134,20 @@ fun JudgeScreen(
                 LazyColumn(
                     horizontalAlignment = Alignment.End
                 ) {
-                    gameRoom.value?.players?.size?.let {
+                    players.value?.size?.let {
                         items(it) { player ->
-                            if (isJudge == false) {
-                                Text(
-                                    text = gameRoom.value?.players!![player].username
-                                            + " = " + gameRoom.value?.players!![player].score,
-                                    color = Color.White,
-                                    fontSize = 10.sp
-                                )
+                            if (roomId != null) {
+                                if (!isJudge) {
+                                    Text(
+                                        text = players.value!![player].username
+                                                + " = " + players.value!![player].score,
+                                        color = Color.White,
+                                        fontSize = 10.sp
+                                    )
+                                }
+
                             }
+
 
                         }
                     }
@@ -136,7 +164,14 @@ fun JudgeScreen(
                 .weight(1f)
         ) {
             for (i in 0 until 2) {
-                ImageFromURL(imagesURL.getOrNull(i) ?: "", navController, roomName, userName)
+                if (roomId != null) {
+                    ImageFromURL(
+                        imagesURL.getOrNull(i) ?: "",
+                        roomId,
+                        viewModel
+                    )
+
+                }
                 if (i % 2 == 0) {
                     Spacer(modifier = Modifier.width(5.dp))
                 }
@@ -148,7 +183,13 @@ fun JudgeScreen(
             modifier = Modifier
                 .weight(1f)
         ) {
-            ImageFromURL(imagesURL.getOrNull(2) ?: "", navController, roomName, userName)
+            if (roomId != null) {
+                ImageFromURL(
+                    imagesURL.getOrNull(2) ?: "",
+                    roomId,
+                    viewModel
+                )
+            }
 
             Column(
                 verticalArrangement = Arrangement.Center,
@@ -171,7 +212,13 @@ fun JudgeScreen(
                 )
             }
 
-            ImageFromURL(imagesURL.getOrNull(3) ?: "", navController, roomName, userName)
+            if (roomId != null) {
+                ImageFromURL(
+                    imagesURL.getOrNull(3) ?: "",
+                    roomId,
+                    viewModel
+                )
+            }
         }
         Row(
             horizontalArrangement = Arrangement.Center,
@@ -180,7 +227,13 @@ fun JudgeScreen(
                 .weight(1f)
         ) {
             for (i in 4 until 6) {
-                ImageFromURL(imagesURL.getOrNull(i) ?: "", navController, roomName, userName)
+                if (roomId != null) {
+                    ImageFromURL(
+                        imagesURL.getOrNull(i) ?: "",
+                        roomId,
+                        viewModel
+                    )
+                }
                 if (i % 2 == 0) {
                     Spacer(modifier = Modifier.width(5.dp))
                 }
@@ -210,11 +263,16 @@ fun JudgeScreen(
 
 @OptIn(ExperimentalCoilApi::class)
 @Composable
-fun ImageFromURL(imageURL: String, navController: NavController, roomName: String, userName: String) {
+fun ImageFromURL(
+    imageURL: String,
+    roomId: String,
+    viewModel: GameViewModel,
+) {
     val painter = rememberImagePainter(
         data = imageURL
     )
     val angle = Random.nextInt(-5, 5)
+
 
     Image(
         painter = painter,
@@ -223,12 +281,8 @@ fun ImageFromURL(imageURL: String, navController: NavController, roomName: Strin
             .size(150.dp)
             .rotate(angle.toFloat())
             .clickable {
-                Log.i("Image", imageURL)
-                navController.navigate("Judge Wait/${roomName}/$imageURL/$userName")
-                //navController.navigate("Judge Wait/${imageURL}")
-                /*val combinedString = roomName + "," + imageURL
-                navController.navigate("Judge Wait/${combinedString}")*/
-                /*TODO: send imageURL*/
+                viewModel.addChosenMeme(imageURL, roomId)
             }
     )
 }
+

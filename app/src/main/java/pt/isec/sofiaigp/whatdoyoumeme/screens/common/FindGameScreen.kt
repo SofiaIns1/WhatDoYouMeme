@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -118,7 +119,7 @@ fun FindGameScreen(navController: NavHostController, viewModel: GameViewModel, u
 
     var roomName: String = ""
 
-    val gameRooms = viewModel.gameRooms.value
+    val gameRooms = viewModel.gameRooms.observeAsState()
 
     Column (
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -205,16 +206,18 @@ fun FindGameScreen(navController: NavHostController, viewModel: GameViewModel, u
                         color = DarkLilac
                     )
 
-                    GameRoomList(
-                        gameRooms = gameRooms,
-                        selectedGameRoomId,
-                        maxPlayers,
-                        onGameRoomClicked = { roomId, max, name ->
-                            selectedGameRoomId.value = roomId
-                            maxPlayers.intValue = max
-                            roomName = name
-                        }
-                    )
+                    gameRooms.value?.let {
+                        GameRoomList(
+                            gameRooms = it,
+                            selectedGameRoomId,
+                            maxPlayers,
+                            onGameRoomClicked = { roomId, max, name ->
+                                selectedGameRoomId.value = roomId
+                                maxPlayers.intValue = max
+                                roomName = name
+                            }
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.padding(vertical = 5.dp))

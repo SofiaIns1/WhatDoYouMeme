@@ -1,5 +1,6 @@
 package pt.isec.sofiaigp.whatdoyoumeme.screens.common
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -33,6 +35,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import pt.isec.sofiaigp.whatdoyoumeme.data.GameRoom
 import pt.isec.sofiaigp.whatdoyoumeme.data.GameViewModel
 import pt.isec.sofiaigp.whatdoyoumeme.screens.player.Card
 import pt.isec.sofiaigp.whatdoyoumeme.screens.player.MemeCard
@@ -40,15 +43,28 @@ import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.DarkBlue
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.Lilac
 
 @Composable
-fun RoundWinnerScreen(navController: NavController, viewModel : GameViewModel, roomName : String, userName:String) {
-    val gameRoom = viewModel.getGameRoomByName(roomName).observeAsState()
+fun RoundWinnerScreen(
+    navController: NavController,
+    viewModel: GameViewModel,
+    roomName: String,
+    userName: String
+) {
+    viewModel.getGameRoomByName(roomName)
+
+    val gameRoom = viewModel.gameRoom.observeAsState()
+    val players = viewModel.players.observeAsState()
+
+
     val roomId = gameRoom.value?.roomId
-    val isJudge = roomId?.let { viewModel.isJudge(it) }
-    val sentences = listOf("When you lie down for a quick nap and wake up 8 hours later",
+
+
+    val sentences = listOf(
         "When you lie down for a quick nap and wake up 8 hours later",
         "When you lie down for a quick nap and wake up 8 hours later",
         "When you lie down for a quick nap and wake up 8 hours later",
-        "When you lie down for a quick nap and wake up 8 hours later")
+        "When you lie down for a quick nap and wake up 8 hours later",
+        "When you lie down for a quick nap and wake up 8 hours later"
+    )
 
     var score by remember {
         mutableIntStateOf(0)
@@ -56,7 +72,7 @@ fun RoundWinnerScreen(navController: NavController, viewModel : GameViewModel, r
 
     LaunchedEffect(roomId) {
         if (roomId != null) {
-            viewModel.getPlayerScore(roomId, userName){playerScore ->
+            viewModel.getPlayerScore(roomId, userName) { playerScore ->
                 score = playerScore
             }
         }
@@ -69,11 +85,11 @@ fun RoundWinnerScreen(navController: NavController, viewModel : GameViewModel, r
             .background(Color.White)
             .padding(10.dp)
             .fillMaxSize()
-    ){
+    ) {
         Row(
             modifier = Modifier
-            .fillMaxWidth()
-        ){
+                .fillMaxWidth()
+        ) {
             Column(
                 modifier = Modifier
                     .weight(1f),
@@ -95,12 +111,12 @@ fun RoundWinnerScreen(navController: NavController, viewModel : GameViewModel, r
                 LazyColumn(
                     horizontalAlignment = Alignment.End
                 ) {
-                    gameRoom.value?.players?.size?.let {
+                    players.value?.size?.let {
                         items(it) { player ->
                             /*TODO: check if gameRoom.value?.players!![player] is not this screens player*/
                             Text(
-                                text = gameRoom.value?.players!![player].username
-                                        + " = " + gameRoom.value?.players!![player].score,
+                                text = players.value!![player].username
+                                        + " = " + players.value!![player].score,
                                 color = Color.DarkGray,
                                 fontSize = 10.sp
                             )
@@ -114,9 +130,17 @@ fun RoundWinnerScreen(navController: NavController, viewModel : GameViewModel, r
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .weight(1f)
-        ){
+        ) {
             if (roomId != null) {
-                Card(sentences.getOrNull(4) ?: "", "", roomName, navController, viewModel, userName, roomId)
+                Card(
+                    sentences.getOrNull(4) ?: "",
+                    "",
+                    roomName,
+                    navController,
+                    viewModel,
+                    userName,
+                    roomId
+                )
             } /*TODO: change to winner sentence*/
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -128,15 +152,19 @@ fun RoundWinnerScreen(navController: NavController, viewModel : GameViewModel, r
 
         Button(
             onClick = {
-                      /*TODO: go to next round
-                      */
-                if(isJudge == true){
-                    navController.navigate("Judge Screen/${roomName}/$userName")
-                }
-                else{
-                    navController.navigate("Player Screen/${roomName}/$userName")
+                /*TODO: go to next round
+                */
 
+                if (roomId != null) {
+                    viewModel.hasGameStarted(roomId) {
+                        if (viewModel.isJudge(roomId, userName)) {
+                            navController.navigate("Judge Screen/${roomName}/$userName")
+                        } else
+                            navController.navigate("Player Screen/${roomName}/$userName")
+
+                    }
                 }
+
             },
             modifier = Modifier
                 .height(65.dp)
