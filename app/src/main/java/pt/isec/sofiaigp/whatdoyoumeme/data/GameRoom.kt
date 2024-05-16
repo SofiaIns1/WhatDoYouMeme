@@ -8,7 +8,9 @@ data class GameRoom(
     val numRounds: Int? = null,
     var winner: String? = null,
     var start: Boolean? = false,
-    val chosenMeme: String? = null
+    val chosenMeme: String? = null,
+    val selectedCards: List<Map<String, String>>? = null,
+    val score: List<MutableMap<String, Int>>? = emptyList()
 )
 
 
@@ -31,3 +33,4 @@ object PreviousGameRoomStateManager{
         previousGameRoomStates[roomId] = gameRoom
     }
 }
+

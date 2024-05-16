@@ -73,11 +73,12 @@ fun NavigationGraph(navController: NavHostController, viewModel: GameViewModel) 
 
             ChoseWinnerScreen(navController, viewModel, roomName, userName)
         }
-        composable("Show Winner/{roomName}/{userName}") { backStackEntry ->
+        composable("Show Winner/{roomName}/{userName}/{sentence}") { backStackEntry ->
             val roomName = backStackEntry.arguments?.getString("roomName") ?: ""
             val userName = backStackEntry.arguments?.getString("userName") ?: ""
+            val sentence = backStackEntry.arguments?.getString("sentence") ?: ""
 
-            RoundWinnerScreen(navController, viewModel, roomName, userName)
+            RoundWinnerScreen(navController, viewModel, roomName, userName, sentence)
         }
     }
 }

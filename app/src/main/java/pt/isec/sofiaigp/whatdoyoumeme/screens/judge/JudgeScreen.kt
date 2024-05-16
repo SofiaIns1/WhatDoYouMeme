@@ -57,6 +57,7 @@ fun JudgeScreen(
     roomName: String,
     userName: String
 ) {
+    Log.i("aqui", "aqui")
     viewModel.getGameRoomByName(roomName)
 
     val gameRoom = viewModel.gameRoom.observeAsState()
@@ -67,15 +68,14 @@ fun JudgeScreen(
     var isJudge by remember { mutableStateOf(false) }
 
     if (roomId != null) {
-        viewModel.hasGameStarted(roomId) {
-            if (viewModel.isJudge(roomId, userName)) {
-                isJudge = true
-            }
+        if (viewModel.isJudge(roomId, userName)) {
+            isJudge = true
         }
+
     }
 
     if (roomId != null) {
-        viewModel.memeUpdated(roomId){
+        viewModel.memeUpdated(roomId) {
             navController.navigate("Judge Wait/${roomName}/$userName")
         }
     }
@@ -93,13 +93,13 @@ fun JudgeScreen(
         mutableIntStateOf(0)
     }
 
-    LaunchedEffect(roomId) {
-        if (roomId != null) {
-            viewModel.getPlayerScore(roomId, userName) { playerScore ->
-                score = playerScore
-            }
+
+    if (roomId != null) {
+        viewModel.getPlayerScore(roomId, userName) { playerScore ->
+            score = playerScore
         }
     }
+
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -250,10 +250,10 @@ fun JudgeScreen(
                 fontSize = 10.sp
             ),
             onClick = { offset ->
-                if (roomId != null) {
-                    viewModel.deletePlayer(roomId, userName)
-                    viewModel.selectJudge(roomId)
-                }
+//                if (roomId != null) {
+//                    viewModel.deletePlayer(roomId, userName)
+//                    viewModel.selectJudge(roomId)
+//                }
 
                 navController.navigate("Home Screen")
             }

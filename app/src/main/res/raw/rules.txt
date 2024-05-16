@@ -7,3 +7,6 @@ All remaining players will play one of their "caption" cards that best fits the 
 You gain points if yor card is chosen by the judge.
 
 At the end, the player with the most points wins.
+
+
+Disclaimer: this project was produced in academic context and we don't have the rights to the game.

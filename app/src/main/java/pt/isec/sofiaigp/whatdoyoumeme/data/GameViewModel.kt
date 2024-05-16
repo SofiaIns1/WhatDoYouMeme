@@ -7,6 +7,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 
 class GameViewModel() : ViewModel() {
     private val firebaseManager = FirebaseManager()
@@ -20,6 +23,9 @@ class GameViewModel() : ViewModel() {
     private val _players = MutableLiveData<List<User>>(emptyList())
     val players: LiveData<List<User>> = _players
 
+    private val _playableCards = MutableLiveData<List<String>>()
+    val playableCards: LiveData<List<String>> = _playableCards
+
     init {
         getGameRoomsList()
     }
@@ -27,6 +33,17 @@ class GameViewModel() : ViewModel() {
     private fun getGameRoomsList() {
         firebaseManager.getGameRoomsList { gameRooms ->
             _gameRooms.postValue(gameRooms)
+        }
+    }
+
+    fun fetchPlayableCards() {
+        viewModelScope.launch {
+            try {
+                val cards = firebaseManager.getRandomPlayableCards()
+                _playableCards.value = cards
+            } catch (e: Exception) {
+                Log.e("Error", "Error fetching cards", e)
+            }
         }
     }
 
@@ -44,6 +61,8 @@ class GameViewModel() : ViewModel() {
         numRounds: Int,
         playerName: String,
         chosenMeme: String? = "",
+        selectedCards: List<Map<String, String>>? = null,
+        score: List<MutableMap<String, Int>>? = null,
         onSuccess: () -> Unit,
         onFailure: () -> Unit
     ) {
@@ -53,6 +72,8 @@ class GameViewModel() : ViewModel() {
             numRounds,
             playerName,
             chosenMeme,
+            selectedCards,
+            score,
             onSuccess,
             onFailure
         )
@@ -87,9 +108,9 @@ class GameViewModel() : ViewModel() {
         return firebaseManager.getRandomMemeImages()
     }
 
-    suspend fun getRandomPlayableCards(): List<String> {
-        return firebaseManager.getRandomPlayableCards()
-    }
+//    suspend fun getRandomPlayableCards(): List<String> {
+//        return firebaseManager.getRandomPlayableCards()
+//    }
 
     fun selectJudge(roomId: String) {
         firebaseManager.selectJudge(roomId) { players ->
@@ -116,15 +137,15 @@ class GameViewModel() : ViewModel() {
         return false
     }
 
-    fun addChosenMeme(chosenMeme: String, roomId: String){
+    fun addChosenMeme(chosenMeme: String, roomId: String) {
         firebaseManager.addChosenMeme(chosenMeme, roomId)
     }
 
-    fun memeUpdated(roomId: String, callback: () -> Unit){
+    fun memeUpdated(roomId: String, callback: () -> Unit) {
         firebaseManager.memeUpdated(roomId, callback)
     }
 
-    fun getChosenMeme(roomId: String, onComplete: (String) -> Unit){
+    fun getChosenMeme(roomId: String, onComplete: (String) -> Unit) {
         firebaseManager.getChosenMeme(roomId, onComplete)
     }
 
@@ -132,23 +153,17 @@ class GameViewModel() : ViewModel() {
         firebaseManager.addSelectedCard(card, playerName, roomId)
     }
 
-    fun isCardSelected(playerName: String, roomId: String, callback: (Boolean) -> Unit){
+    fun isCardSelected(playerName: String, roomId: String, callback: () -> Unit) {
         firebaseManager.isCardSelected(playerName, roomId, callback)
     }
 
-//    fun allCardsSelected(roomId: String, callback: () -> Unit){
-//        firebaseManager.allCardsSelected(roomId, callback)
-//    }
 
-    fun allCardsSelected(roomId: String, playerName: String):Boolean{
-        if(!isJudge(roomId, playerName)){
-            for(room in _gameRooms.value!!){
-                if(room.roomId == roomId){
-                    for(player in _players.value!!){
-                        if(player.selectedCard != "")
-                            return true
-                    }
-                }
+    fun allCardsSelected(roomId: String): Boolean {
+
+        for (room in _gameRooms.value!!) {
+            if (room.roomId == roomId) {
+                if (room.selectedCards?.size == room.currentNumPlayers?.minus(1))
+                    return true
             }
         }
         return false
@@ -158,12 +173,20 @@ class GameViewModel() : ViewModel() {
         firebaseManager.updateScore(chosenCard, roomId)
     }
 
-    fun getSelectedCards(roomId: String, onComplete: (List<String>) -> Unit) {
+    fun getSelectedCards(roomId: String, onComplete: (List<Map<String, String>>) -> Unit) {
         firebaseManager.getSelectedCards(roomId, onComplete)
     }
 
     fun getPlayerScore(roomId: String, playerName: String, onComplete: (Int) -> Unit) {
         firebaseManager.getPlayerScore(roomId, playerName, onComplete)
+    }
+
+    fun resetMeme(roomId: String){
+        firebaseManager.resetMeme(roomId)
+    }
+
+    fun resetSelectedCards(roomId: String){
+        firebaseManager.resetSelectedCards(roomId)
     }
 
     fun deletePlayer(roomId: String, playerName: String) {

@@ -56,11 +56,10 @@ fun JudgeWaitScreen(
 
 
     if (roomId != null) {
-        viewModel.hasGameStarted(roomId) {
-            if (viewModel.isJudge(roomId, userName)) {
-                isJudge = true
-            }
+        if (viewModel.isJudge(roomId, userName)) {
+            isJudge = true
         }
+
     }
 
     var chosenMeme by remember {
@@ -75,7 +74,7 @@ fun JudgeWaitScreen(
 
 
     if (roomId != null) {
-        if(viewModel.allCardsSelected(roomId, userName)){
+        if (viewModel.allCardsSelected(roomId)) {
             navController.navigate("Chose Winner/${roomName}/$userName")
         }
     }
@@ -85,13 +84,13 @@ fun JudgeWaitScreen(
         mutableIntStateOf(0)
     }
 
-    LaunchedEffect(roomId) {
-        if (roomId != null) {
-            viewModel.getPlayerScore(roomId, userName) { playerScore ->
-                score = playerScore
-            }
+
+    if (roomId != null) {
+        viewModel.getPlayerScore(roomId, userName) { playerScore ->
+            score = playerScore
         }
     }
+
 
     Column(
         verticalArrangement = Arrangement.Center,

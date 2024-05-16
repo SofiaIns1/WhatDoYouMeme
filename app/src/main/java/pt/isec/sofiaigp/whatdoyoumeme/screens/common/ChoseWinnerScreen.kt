@@ -5,15 +5,20 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -23,20 +28,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import pt.isec.sofiaigp.whatdoyoumeme.data.GameRoom
 import pt.isec.sofiaigp.whatdoyoumeme.data.GameViewModel
-import pt.isec.sofiaigp.whatdoyoumeme.screens.player.Card
-import pt.isec.sofiaigp.whatdoyoumeme.screens.player.MemeCard
+import pt.isec.sofiaigp.whatdoyoumeme.screens.Card
+import pt.isec.sofiaigp.whatdoyoumeme.screens.MemeCard
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.DarkBlue
+import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.Lilac
 
 @Composable
 fun ChoseWinnerScreen(
     navController: NavController, viewModel: GameViewModel, roomName: String, userName: String
 ) {
+
+
     viewModel.getGameRoomByName(roomName)
 
     val gameRoom = viewModel.gameRoom.observeAsState()
@@ -46,6 +55,7 @@ fun ChoseWinnerScreen(
 
     val roomId = gameRoom.value?.roomId
 
+
     if (roomId != null) {
         if (viewModel.isJudge(roomId, userName)) {
             clickable = "yes"
@@ -53,21 +63,11 @@ fun ChoseWinnerScreen(
 
     }
 
-//    var chosenMeme by remember {
-//        mutableStateOf("")
-//    }
-
-//    if (roomId != null) {
-//        viewModel.getChosenMeme(roomId) {
-//            chosenMeme = it
-//        }
-//    }
-   val chosenMeme = gameRoom.value?.chosenMeme.toString()
-
+    val chosenMeme = gameRoom.value?.chosenMeme.toString()
 
     var i = 0
 
-    var sentences by remember { mutableStateOf(emptyList<String>()) }
+    var sentences by remember { mutableStateOf(emptyList<Map<String, String>>()) }
 
     if (roomId != null) {
         viewModel.getSelectedCards(roomId) { cards ->
@@ -80,13 +80,13 @@ fun ChoseWinnerScreen(
         mutableIntStateOf(0)
     }
 
-    LaunchedEffect(roomId) {
-        if (roomId != null) {
-            viewModel.getPlayerScore(roomId, userName) { playerScore ->
-                score = playerScore
-            }
+    if (roomId != null) {
+        viewModel.getPlayerScore(roomId, userName) { playerScore ->
+            score = playerScore
         }
     }
+
+    val isJudge = roomId?.let { viewModel.isJudge(it, userName) }
 
 
     Column(
@@ -160,9 +160,10 @@ fun ChoseWinnerScreen(
                             .weight(1f)
                     ) {
                         if (roomId != null) {
-                            sentences.getOrNull(i)?.let {
+                            sentences.getOrNull(i)?.let { sentenceMap ->
+                                val sentence = sentenceMap["card"]
                                 Card(
-                                    sentence = it,
+                                    sentence = sentence.toString(),
                                     memeUrl = clickable,
                                     roomName = roomName,
                                     navController = navController,
@@ -170,7 +171,13 @@ fun ChoseWinnerScreen(
                                     userName,
                                     roomId,
                                     true
-                                )
+                                ){
+
+                                        Log.d("Callback", "AQUI")
+
+                                        navController.navigate("Show Winner/${roomName}/$userName/$sentence")
+
+                                }
                             }
                         }
                         i++
@@ -185,9 +192,10 @@ fun ChoseWinnerScreen(
                                 .weight(1f)
                         ) {
                             if (roomId != null) {
-                                sentences.getOrNull(i)?.let {
+                                sentences.getOrNull(i)?.let { sentenceMap ->
+                                    val sentence = sentenceMap["card"]
                                     Card(
-                                        sentence = it,
+                                        sentence = sentence.toString(),
                                         memeUrl = clickable,
                                         roomName = roomName,
                                         navController = navController,
@@ -195,7 +203,11 @@ fun ChoseWinnerScreen(
                                         userName,
                                         roomId,
                                         true
-                                    )
+                                    ) {
+                                            Log.d("Callback", "AQUI")
+                                            navController.navigate("Show Winner/${roomName}/$userName/$sentence")
+
+                                    }
                                 }
                             }
                             i++
@@ -221,9 +233,10 @@ fun ChoseWinnerScreen(
                             .weight(1f)
                     ) {
                         if (roomId != null) {
-                            sentences.getOrNull(i)?.let {
+                            sentences.getOrNull(i)?.let { sentenceMap ->
+                                val sentence = sentenceMap["card"]
                                 Card(
-                                    sentence = it,
+                                    sentence = sentence.toString(),
                                     memeUrl = clickable,
                                     roomName = roomName,
                                     navController = navController,
@@ -231,7 +244,13 @@ fun ChoseWinnerScreen(
                                     userName,
                                     roomId,
                                     true
-                                )
+                                ) {
+                                    if (isJudge == false) {
+                                        Log.d("Callback", "AQUI")
+
+                                        navController.navigate("Show Winner/${roomName}/$userName/$sentence")
+                                    }
+                                }
                             }
                         }
                         i++
@@ -255,9 +274,10 @@ fun ChoseWinnerScreen(
                         .weight(1f)
                 ) {
                     if (roomId != null) {
-                        sentences.getOrNull(i)?.let {
+                        sentences.getOrNull(i)?.let { sentenceMap ->
+                            val sentence = sentenceMap["card"]
                             Card(
-                                sentence = it,
+                                sentence = sentence.toString(),
                                 memeUrl = clickable,
                                 roomName = roomName,
                                 navController = navController,
@@ -265,11 +285,19 @@ fun ChoseWinnerScreen(
                                 userName,
                                 roomId,
                                 true
-                            )
+                            ) {
+                                if (isJudge == false) {
+                                    Log.d("Callback", "AQUI")
+
+                                    navController.navigate("Show Winner/${roomName}/$userName/$sentence")
+                                }
+                            }
                         }
                     }
                     i++
                 }
+
+
                 if (players.value?.size != null && players.value?.size!! != 4) {
                     Column(
                         verticalArrangement = Arrangement.Center,
@@ -279,9 +307,10 @@ fun ChoseWinnerScreen(
                             .weight(1f)
                     ) {
                         if (roomId != null) {
-                            sentences.getOrNull(i)?.let {
+                            sentences.getOrNull(i)?.let { sentenceMap ->
+                                val sentence = sentenceMap["card"]
                                 Card(
-                                    sentence = it,
+                                    sentence = sentence.toString(),
                                     memeUrl = clickable,
                                     roomName = roomName,
                                     navController = navController,
@@ -289,7 +318,13 @@ fun ChoseWinnerScreen(
                                     userName,
                                     roomId,
                                     true
-                                )
+                                ) {
+                                    if (isJudge == false) {
+                                        Log.d("Callback", "AQUI")
+
+                                        navController.navigate("Show Winner/${roomName}/$userName/$sentence")
+                                    }
+                                }
                             }
                         }
                     }
@@ -297,4 +332,5 @@ fun ChoseWinnerScreen(
             }
         }
     }
+
 }

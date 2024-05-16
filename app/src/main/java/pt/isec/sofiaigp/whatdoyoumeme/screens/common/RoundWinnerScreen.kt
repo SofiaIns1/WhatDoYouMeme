@@ -37,8 +37,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import pt.isec.sofiaigp.whatdoyoumeme.data.GameRoom
 import pt.isec.sofiaigp.whatdoyoumeme.data.GameViewModel
-import pt.isec.sofiaigp.whatdoyoumeme.screens.player.Card
-import pt.isec.sofiaigp.whatdoyoumeme.screens.player.MemeCard
+import pt.isec.sofiaigp.whatdoyoumeme.screens.Card
+import pt.isec.sofiaigp.whatdoyoumeme.screens.MemeCard
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.DarkBlue
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.Lilac
 
@@ -47,7 +47,8 @@ fun RoundWinnerScreen(
     navController: NavController,
     viewModel: GameViewModel,
     roomName: String,
-    userName: String
+    userName: String,
+    sentence: String
 ) {
     viewModel.getGameRoomByName(roomName)
 
@@ -57,26 +58,38 @@ fun RoundWinnerScreen(
 
     val roomId = gameRoom.value?.roomId
 
+    if (roomId != null) {
+        gameRoom.value?.score?.size?.toString()?.let { Log.i("1", it) }
+        //Log.i("1", gameRoom.value?.score?.get(players.value.get(0).username)?.toString()
+        //Log.i("1", gameRoom.value?.score?.get(0).toString())
+       //viewModel.updateScore(sentence, roomId)
+    }
 
-    val sentences = listOf(
-        "When you lie down for a quick nap and wake up 8 hours later",
-        "When you lie down for a quick nap and wake up 8 hours later",
-        "When you lie down for a quick nap and wake up 8 hours later",
-        "When you lie down for a quick nap and wake up 8 hours later",
-        "When you lie down for a quick nap and wake up 8 hours later"
-    )
+    var winner by remember {
+        mutableStateOf("")
+    }
+
+    val memeUrl = gameRoom.value?.chosenMeme
 
     var score by remember {
         mutableIntStateOf(0)
     }
 
-    LaunchedEffect(roomId) {
-        if (roomId != null) {
+
+    if (roomId != null) {
+        Log.i("ss", score.toString())
+        LaunchedEffect(roomId, userName) {
             viewModel.getPlayerScore(roomId, userName) { playerScore ->
                 score = playerScore
             }
         }
+        /*viewModel.getPlayerScore(roomId, userName) { playerScore ->
+            score = playerScore
+        }*/
+
     }
+
+    Log.i("s", score.toString())
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -132,38 +145,49 @@ fun RoundWinnerScreen(
                 .weight(1f)
         ) {
             if (roomId != null) {
-                Card(
-                    sentences.getOrNull(4) ?: "",
-                    "",
-                    roomName,
-                    navController,
-                    viewModel,
-                    userName,
-                    roomId
-                )
-            } /*TODO: change to winner sentence*/
+                if (memeUrl != null) {
+                    Card(
+                        sentence,
+                        memeUrl,
+                        roomName,
+                        navController,
+                        viewModel,
+                        userName,
+                        roomId
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            MemeCard(memeUrl = "not empty") /*TODO: send the URL to the judge's chosen meme*/
+            if (memeUrl != null) {
+                MemeCard(memeUrl)
+            }
         }
 
         Spacer(modifier = Modifier.height(15.dp))
 
         Button(
             onClick = {
-                /*TODO: go to next round
-                */
+//                if (roomId != null) {
+//                    viewModel.resetMeme(roomId)
+//                }
+//                if (roomId != null) {
+//                    viewModel.resetSelectedCards(roomId)
+//                }
+//
+//                if (roomId != null) {
+//                    viewModel.selectJudge(roomId)
+//                }
+//
+//                if (roomId != null) {
+//                    if (viewModel.isJudge(roomId, userName)) {
+//                        navController.navigate("Judge Screen/${roomName}/$userName")
+//                    } else
+//                        navController.navigate("Player Screen/${roomName}/$userName")
 
-                if (roomId != null) {
-                    viewModel.hasGameStarted(roomId) {
-                        if (viewModel.isJudge(roomId, userName)) {
-                            navController.navigate("Judge Screen/${roomName}/$userName")
-                        } else
-                            navController.navigate("Player Screen/${roomName}/$userName")
+//                }
 
-                    }
-                }
 
             },
             modifier = Modifier
@@ -191,9 +215,9 @@ fun RoundWinnerScreen(
                 fontSize = 10.sp
             ),
             onClick = { offset ->
-                if (roomId != null) {
-                    viewModel.deletePlayer(roomId, userName)
-                }
+//                if (roomId != null) {
+//                    viewModel.deletePlayer(roomId, userName)
+//                }
                 navController.navigate("Home Screen")
             }
         )

@@ -47,6 +47,8 @@ import kotlinx.coroutines.launch
 import pt.isec.sofiaigp.whatdoyoumeme.R
 import pt.isec.sofiaigp.whatdoyoumeme.data.GameRoom
 import pt.isec.sofiaigp.whatdoyoumeme.data.GameViewModel
+import pt.isec.sofiaigp.whatdoyoumeme.screens.Card
+import pt.isec.sofiaigp.whatdoyoumeme.screens.MemeCard
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.DarkBlue
 import pt.isec.sofiaigp.whatdoyoumeme.ui.theme.LightBlue
 import kotlin.random.Random
@@ -62,11 +64,14 @@ fun PlayerScreen(
 
     val gameRoom = viewModel.gameRoom.observeAsState()
     val players = viewModel.players.observeAsState()
+    val sentences = viewModel.playableCards.observeAsState()
 
-    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchPlayableCards()
+    }
 
     var memeUrl by remember { mutableStateOf("n") }
-    var sentences by remember { mutableStateOf<List<String>>(emptyList()) }
 
     val roomId = gameRoom.value?.roomId
 
@@ -80,18 +85,9 @@ fun PlayerScreen(
         }
     }
 
-    if(roomId != null){
-        viewModel.isCardSelected(userName, roomId){
+    if (roomId != null) {
+        viewModel.isCardSelected(userName, roomId) {
             navController.navigate("Chose Winner/${roomName}/$userName")
-        }
-    }
-
-    Log.d("MEME", chosenMeme)
-
-
-    LaunchedEffect(Unit) {
-        coroutineScope.launch {
-            sentences = viewModel.getRandomPlayableCards()
         }
     }
 
@@ -99,13 +95,13 @@ fun PlayerScreen(
         mutableIntStateOf(0)
     }
 
-    LaunchedEffect(roomId) {
-        if (roomId != null) {
-            viewModel.getPlayerScore(roomId, userName) { playerScore ->
-                score = playerScore
-            }
+
+    if (roomId != null) {
+        viewModel.getPlayerScore(roomId, userName) { playerScore ->
+            score = playerScore
         }
     }
+
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -172,7 +168,7 @@ fun PlayerScreen(
                 ) {
                     if (roomId != null) {
                         Card(
-                            sentences.getOrNull(i) ?: "",
+                            sentences.value?.getOrNull(i) ?: "",
                             memeUrl, roomName, navController, viewModel, userName, roomId
                         )
                     }
@@ -196,7 +192,7 @@ fun PlayerScreen(
             ) {
                 if (roomId != null) {
                     Card(
-                        sentences.getOrNull(3) ?: "",
+                        sentences.value?.getOrNull(3) ?: "",
                         memeUrl, roomName, navController, viewModel, userName, roomId
                     )
 
@@ -220,7 +216,7 @@ fun PlayerScreen(
             ) {
                 if (roomId != null) {
                     Card(
-                        sentences.getOrNull(4) ?: "",
+                        sentences.value?.getOrNull(4) ?: "",
                         memeUrl, roomName, navController, viewModel, userName, roomId
                     )
 
@@ -242,7 +238,7 @@ fun PlayerScreen(
                 ) {
                     if (roomId != null) {
                         Card(
-                            sentences.getOrNull(i) ?: "",
+                            sentences.value?.getOrNull(i) ?: "",
                             memeUrl, roomName, navController, viewModel, userName, roomId
                         )
 
@@ -261,108 +257,13 @@ fun PlayerScreen(
                 fontSize = 10.sp
             ),
             onClick = { offset ->
-                if (roomId != null) {
-                    viewModel.deletePlayer(roomId, userName)
-                }
+//                if (roomId != null) {
+//                    viewModel.deletePlayer(roomId, userName)
+//                }
                 navController.navigate("Home Screen")
             }
         )
     }
 }
 
-@Composable
-fun Card(
-    sentence: String,
-    memeUrl: String,
-    roomName: String,
-    navController: NavController,
-    viewModel: GameViewModel,
-    userName: String,
-    roomId: String,
-    winner: Boolean = false,
 
-    ) {
-    val angle = Random.nextInt(-5, 5)
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .rotate(angle.toFloat())
-            .height(190.dp)
-            .width(120.dp)
-            .padding(2.dp)
-            .background(DarkBlue, RoundedCornerShape(10.dp))
-            .padding(1.dp)
-            .clickable {
-                viewModel.addSelectedCard(sentence, userName, roomId)
-                /*TODO:
-               - verify if meme exists(string not blank), then navigate to next screen;
-               - show chosen card to the judge
-            */
-//                if (winner) {
-//                    viewModel.updateScore(sentence, roomId)
-//                    navController.navigate("Show Winner/${roomName}")
-//                } else {
-//                    navController.navigate("Chose Winner/${roomName}/$userName")
-//                }
-
-            }
-    ) {
-        Text(
-            text = sentence,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 12.sp,
-            textAlign = TextAlign.Center,
-            lineHeight = 1.em,
-            modifier = Modifier.padding(1.dp)
-        )
-    }
-
-}
-
-
-@OptIn(ExperimentalCoilApi::class)
-@Composable
-fun MemeCard(memeUrl: String) {
-    if (memeUrl.isBlank()) {
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .height(190.dp)
-                .width(120.dp)
-                .padding(2.dp)
-                .background(DarkBlue, RoundedCornerShape(10.dp))
-                .padding(1.dp)
-        ) {
-            Text(
-                text = "Player",
-                color = LightBlue,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "Waiting for judge to chose the meme...",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center,
-                lineHeight = 1.em,
-                modifier = Modifier.padding(1.dp)
-            )
-        }
-    } else {
-        val painter = rememberImagePainter(
-            data = memeUrl
-        )
-        Image(
-            painter = painter,
-            contentDescription = "Bru",
-            modifier = Modifier
-                .height(190.dp)
-                .width(120.dp)
-        )
-    }
-}

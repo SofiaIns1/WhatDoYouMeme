@@ -1,15 +1,10 @@
 package pt.isec.sofiaigp.whatdoyoumeme.data
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.MetadataChanges
 import kotlinx.coroutines.tasks.await
-import kotlin.properties.Delegates
 
 class FirebaseManager() {
 
@@ -33,7 +28,7 @@ class FirebaseManager() {
                         "playerName" to playerName,
                         "score" to score,
                         "role" to role,
-                        "selectedCard" to selectedCard,
+                        "selectedCard" to selectedCard
                     )
 
                     db.collection("players")
@@ -62,6 +57,8 @@ class FirebaseManager() {
         numRounds: Int,
         playerName: String,
         chosenMeme: String? = "",
+        selectedCards: List<Map<String, String>>? = emptyList<Map<String, String>>(),
+        score: List<MutableMap<String, Int>>? = emptyList<MutableMap<String, Int>>(),
         onSuccess: () -> Unit,
         onFailure: () -> Unit,
     ) {
@@ -75,7 +72,9 @@ class FirebaseManager() {
                         "roomName" to roomName,
                         "maxPlayers" to maxPlayers,
                         "numRounds" to numRounds,
-                        "chosenMeme" to chosenMeme
+                        "chosenMeme" to chosenMeme,
+                        "selectedCards" to selectedCards,
+                        "score" to score
                     )
 
                     db.collection("game_rooms")
@@ -158,6 +157,10 @@ class FirebaseManager() {
                     val winner = document.getString("winner")
                     val start = document.getBoolean("start")
                     val chosenMeme = document.getString("chosenMeme")
+                    val selectedCards =
+                        document.get("selectedCards") as? List<Map<String, String>> ?: emptyList()
+                    val score =
+                        document.get("score") as? List<MutableMap<String, Int>> ?: emptyList()
 
                     getPlayersByGameRoomId(roomId,
                         onSuccess = { players ->
@@ -171,7 +174,9 @@ class FirebaseManager() {
                                 numRounds,
                                 winner,
                                 start,
-                                chosenMeme
+                                chosenMeme,
+                                selectedCards,
+                                score
                             )
 
                             gameRooms.add(gameRoom)
@@ -219,6 +224,12 @@ class FirebaseManager() {
                         val winner = document.getString("winner")
                         val start = document.getBoolean("start")
                         val chosenMeme = document.getString("chosenMeme")
+                        val selectedCards =
+                            document.get("selectedCards") as? List<Map<String, String>>
+                                ?: emptyList()
+                        val score =
+                            document.get("score") as? List<MutableMap<String, Int>> ?: emptyList()
+
 
                         getPlayersByGameRoomId(
                             roomId,
@@ -232,8 +243,11 @@ class FirebaseManager() {
                                         numRounds,
                                         winner,
                                         start,
-                                        chosenMeme
+                                        chosenMeme,
+                                        selectedCards,
+                                        score
                                     )
+                                Log.i("aaa", gameRoom.score?.size.toString())
 
                                 val previousGameRoom =
                                     PreviousGameRoomStateManager.getPreviousGameRoomState(roomId)
@@ -241,13 +255,13 @@ class FirebaseManager() {
                                     saveGameRoomToFirestore(gameRoom)
                                     updatePlayersInFirestore(roomId, players)
                                     onUpdate(gameRoom, players)
+
                                 }
 
                                 PreviousGameRoomStateManager.updatePreviousGameRoomState(
                                     roomId,
                                     gameRoom
                                 )
-
 
                             },
                             onFailure = {
@@ -287,7 +301,9 @@ class FirebaseManager() {
                     val user = User(playerId, username, score, role, selectedCard)
                     players.add(user)
                 }
+
                 onSuccess(players)
+
             }
 
         }
@@ -306,7 +322,9 @@ class FirebaseManager() {
                         "numRounds" to gameRoom.numRounds,
                         "winner" to gameRoom.winner,
                         "start" to gameRoom.start,
-                        "chosenMeme" to gameRoom.chosenMeme
+                        "chosenMeme" to gameRoom.chosenMeme,
+                        "selectedCards" to gameRoom.selectedCards,
+                        "score" to gameRoom.score
                     )
                 )
                 .addOnSuccessListener {
@@ -523,121 +541,85 @@ class FirebaseManager() {
 //
 //    }
 
+//    fun addSelectedCard(card: String, playerName: String, roomId: String) {
+//        val roomRef = db.collection("game_rooms").document(roomId)
+//
+//        roomRef.collection("players")
+//            .whereEqualTo("playerName", playerName)
+//            .get()
+//            .addOnSuccessListener { playerSnapshot ->
+//                for (playerDocument in playerSnapshot.documents) {
+//                    val playerId = playerDocument.id
+//                    val playerRef = roomRef.collection("players").document(playerId)
+//
+//                    playerRef.update("selectedCard", card)
+//                        .addOnSuccessListener {
+//                            Log.d("TAG", "Selected card updated for player $playerName")
+//
+//                        }
+//                        .addOnFailureListener { e ->
+//                            Log.e("TAG", "Error updating card for player $playerName", e)
+//                        }
+//                }
+//            }
+//            .addOnFailureListener { e ->
+//                Log.e("TAG", "Error fetching player document for $playerName", e)
+//            }
+//
+//    }
+
     fun addSelectedCard(card: String, playerName: String, roomId: String) {
         val roomRef = db.collection("game_rooms").document(roomId)
 
-        roomRef.collection("players")
-            .whereEqualTo("playerName", playerName)
-            .get()
-            .addOnSuccessListener { playerSnapshot ->
-                for (playerDocument in playerSnapshot.documents) {
-                    val playerId = playerDocument.id
-                    val playerRef = roomRef.collection("players").document(playerId)
-
-                    playerRef.update("selectedCard", card)
-                        .addOnSuccessListener {
-                            Log.d("TAG", "Selected card updated for player $playerName")
-                        }
-                        .addOnFailureListener { e ->
-                            Log.e("TAG", "Error updating card for player $playerName", e)
-                        }
-                }
+        roomRef.update(
+            "selectedCards",
+            FieldValue.arrayUnion(mapOf("playerName" to playerName, "card" to card))
+        )
+            .addOnSuccessListener {
+                Log.d("TAG", "Selected card updated for player $playerName")
             }
             .addOnFailureListener { e ->
-                Log.e("TAG", "Error fetching player document for $playerName", e)
+                Log.e("TAG", "Error updating card for player $playerName", e)
             }
-
     }
 
-    fun isCardSelected(playerName: String, roomId: String, callback: (Boolean) -> Unit) {
+    fun isCardSelected(playerName: String, roomId: String, callback: () -> Unit) {
         db.collection("game_rooms").document(roomId)
-            .collection("players")
-            .addSnapshotListener { snapshot, e ->
+            .addSnapshotListener { documentSnapshot, e ->
                 if (e != null) {
                     Log.w("TAG", "Listen failed.", e)
                     return@addSnapshotListener
                 }
 
-                if (snapshot != null) {
-                    for (playerDocument in snapshot.documents) {
-                        val name = playerDocument.getString("playerName")
-                        if (name == playerName) {
-                            val selectedCard = playerDocument.getString("selectedCard")
-                            if(selectedCard != "")
-                                callback(true)
-                            break
+                if (documentSnapshot != null && documentSnapshot.exists()) {
+                    val selectedCards =
+                        documentSnapshot.get("selectedCards") as? List<Map<String, String>>
+                    selectedCards?.let { cards ->
+                        for (card in cards) {
+                            if (card.containsValue(playerName)) {
+                                callback()
+                            }
                         }
+
                     }
                 }
+
             }
     }
 
-
-    fun getSelectedCards(roomId: String, onComplete: (List<String>) -> Unit) {
-
-        val roomRef = db.collection("game_rooms").document(roomId)
-
-        roomRef.collection("players")
-            .addSnapshotListener { playerSnapshot, e ->
-                if (e != null) {
-                    Log.w("TAG", "listen failed", e)
-                    return@addSnapshotListener
-                }
-
-                if (playerSnapshot != null) {
-                    val selectedCards = mutableListOf<String>()
-                    for (playerDocument in playerSnapshot.documents) {
-                        val selectedCard = playerDocument.getString("selectedCard")
-                        if (!selectedCard.isNullOrEmpty()) {
-                            selectedCards.add(selectedCard)
-                        }
-                    }
-                    onComplete(selectedCards)
-                }
-
-
-//        val roomRef = db.collection("game_rooms").document(roomId)
-//
-//        roomRef.collection("players")
-//            .get()
-//            .addOnSuccessListener { playerSnapshot ->
-//                val selectedCards = mutableListOf<String>()
-//                for (playerDocument in playerSnapshot.documents) {
-//                    val selectedCard = playerDocument.getString("selectedCard")
-//                    if (!selectedCard.isNullOrEmpty()) {
-//                        selectedCards.add(selectedCard)
-//                    }
-//                }
-//                onComplete(selectedCards)
-//
-//            }.addOnFailureListener { e ->
-//                Log.e("TAG", "Error getting selected cards", e)
-//                onComplete(emptyList())
-//            }
+    fun getSelectedCards(roomId: String, onComplete: (List<Map<String, String>>) -> Unit) {
+        db.collection("game_rooms").document(roomId)
+            .get()
+            .addOnSuccessListener { document ->
+                val selectedCards =
+                    document.get("selectedCards") as? List<Map<String, String>> ?: emptyList()
+                onComplete(selectedCards)
+            }
+            .addOnFailureListener { e ->
+                Log.e("TAG", "Error getting selected cards", e)
+                onComplete(emptyList())
             }
     }
-
-//    fun allCardsSelected(roomId: String, callback: () -> Unit){
-//
-//        db.collection("game_rooms").document(roomId)
-//            .collection("players")
-//            .addSnapshotListener{snapshot, e ->
-//                if(e != null){
-//                    Log.w("TAG", "listen failed", e)
-//                    return@addSnapshotListener
-//                }
-//
-//                if(snapshot != null){
-//                    for(player in snapshot.documents){
-//                        if (player.getString("role") != "judge"){
-//                            if(player.getString("selectedCard") != ""){
-//                                callback()
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//    }
 
     fun addChosenMeme(chosenMeme: String, roomId: String) {
         db.collection("game_rooms").document(roomId)
@@ -679,67 +661,130 @@ class FirebaseManager() {
                         return@addSnapshotListener
                     }
                 }
-                //onComplete("")
             }
+    }
+
+    private fun getRoundWinner(chosenCard: String, roomId: String, callback: (String) -> Unit) {
+        var playerName: String = ""
+
+        db.collection("game_rooms").document(roomId)
+            .get()
+            .addOnSuccessListener {
+                val selectedCards = it.get("selectedCards") as? List<Map<String, String>>
+                selectedCards.let { cards ->
+                    if (cards != null) {
+                        for (card in cards) {
+                            if (card.containsValue(chosenCard)) {
+                                playerName = card["playerName"].toString()
+                                Log.d("Winner", playerName)
+                                callback(playerName)
+                                return@addOnSuccessListener
+                            }
+                        }
+                    }
+
+                }
+            }.addOnFailureListener { exception ->
+                Log.e("Error", "Error getting selected cards", exception)
+                callback("")
+            }
+
     }
 
     fun updateScore(chosenCard: String, roomId: String) {
-        val roomRef = db.collection("game_rooms").document(roomId)
-
-        roomRef.collection("players")
-            .get()
-            .addOnSuccessListener { playerSnapshot ->
-                for (playerDocument in playerSnapshot.documents) {
-                    val playerId = playerDocument.id
-                    val playerRef = roomRef.collection("players").document(playerId)
-                    val selectedCard = playerDocument.getString("selectedCard")
-
-
-                    if (selectedCard == chosenCard) {
-                        playerRef.update("score", FieldValue.increment(1))
-                            .addOnSuccessListener {
-                                Log.d("TAG", "Score updated for player $playerId")
-                            }
-                            .addOnFailureListener { e ->
-                                Log.e("TAG", "Error updating score for player $playerId", e)
-                            }
-                    }
-
-                    playerRef.update("selectedCard", "")
-                        .addOnSuccessListener {
-                            Log.d("TAG", "Selected card reset")
-                        }
-                        .addOnFailureListener { e ->
-                            Log.e("TAG", "Error reseting selected card")
-
-                        }
+        getRoundWinner(chosenCard, roomId) { winner ->
+            val roomRef = db.collection("game_rooms").document(roomId)
+                .update(
+                    "score",
+                    FieldValue.arrayUnion(
+                        mapOf(
+                            "playerName" to winner,
+                            "score" to 1
+                        )
+                    )
+                )
+                .addOnSuccessListener { snapshot ->
+                    Log.d("TAG", "Player score updated successfully in game room.")
 
                 }
+                .addOnFailureListener { e ->
+                    Log.e("Error", "Error updating player score", e)
+                }
+        }
+    }
 
-            }.addOnFailureListener { e ->
-                Log.e("TAG", "Error comparing slected card with judge's card", e)
+    fun getPlayerScore(roomId: String, playerName: String, onComplete: (Int) -> Unit) {
+        //Log.i("abc", "aasd")
+        db.collection("game_rooms").document(roomId)
+            .addSnapshotListener { snapshot, e ->
+                if (snapshot != null) {
+                    val score = snapshot.get("score") as List<Map<String, String>>
+                    score.let { scores ->
+                        for (s in scores) {
+                            Log.i("aabc", s.toString())
+                            Log.i("aabc", s.keys.toString())
+                            //s.key==username
+                            //value = playername
+                            if (s.containsKey("playerName") && s.containsKey("score")) {
+                                val value = s["playerName"]
+                                val v = s["score"].toString()
+                                Log.i("1", "1")
+                                if (value != null && v.isNotBlank()) {
+                                    Log.i("2", value.toString())
+                                    if (value.equals(playerName)) {
+                                        Log.d("SCOREa", v)
+                                        onComplete(v.toInt())
+                                    }
+                                }
+                                /*val playerScore = s[playerName]
+                                    Log.d("SCOREa","$playerScore")
+                                    if (playerScore != null) {
+                                        Log.d("SCORE","$playerScore")
+                                        onComplete(playerScore)
+                                    }*/
+                            }
+                        }
+                    }
+
+                }
             }
     }
 
+    fun resetMeme(roomId: String) {
+        db.collection("game_rooms").document(roomId)
+            .update("chosenMeme", "")
+            .addOnSuccessListener {
+                Log.d("TAG", "Chosen meme reseted")
+            }
+            .addOnFailureListener {
+                Log.e("Error", "Error reseting chosen meme")
+            }
+    }
 
-    fun getPlayerScore(roomId: String, playerName: String, onComplete: (Int) -> Unit) {
-        val roomRef = db.collection("game_rooms").document(roomId)
+    fun resetSelectedCards(roomId: String) {
+        db.collection("game_rooms").document(roomId)
+            .update("selectedCards", FieldValue.arrayUnion(mapOf("playerName" to "", "card" to "")))
+            .addOnSuccessListener {
+                Log.d("TAG", "Selected cards reseted")
+            }
+            .addOnFailureListener {
+                Log.e("Error", "Error reseting chosen meme")
+            }
+    }
 
-        val players = roomRef.collection("players")
+    fun getPlayerId(username : String) : String{
+        val playerRef = db.collection("players")
+        var id : String = ""
 
-        players
-            .whereEqualTo("playerName", playerName)
-            .addSnapshotListener { playerSnapshot, e ->
-                if (playerSnapshot != null) {
-                    for (playerDocument in playerSnapshot.documents) {
-                        val score = playerDocument.getLong("score")?.toInt() ?: 0
-                        onComplete(score)
-                        return@addSnapshotListener
-                    }
+        playerRef.whereEqualTo("playerName", username)
+            .get()
+            .addOnSuccessListener { playerSnapshot ->
+                for (playerDocument in playerSnapshot.documents) {
+                    id = playerDocument.id
                 }
-                // onComplete(0)
             }
 
+        return id
     }
 
     fun deletePlayer(roomId: String, playerName: String) {
@@ -768,5 +813,19 @@ class FirebaseManager() {
             .addOnFailureListener { e ->
                 Log.e("TAG", "Error getting players", e)
             }
+
+//        val id = getPlayerId(playerName)
+//        if (id.isNotBlank()) {
+//            db.collection("players")
+//                .document(id).delete()
+//                .addOnSuccessListener {
+//                    Log.d("TAG", "Player $id deleted")
+//                }
+//                .addOnFailureListener { e ->
+//                    Log.e("TAG", "Error deleting player $id", e)
+//                }
+//        }
+
+
     }
 }
