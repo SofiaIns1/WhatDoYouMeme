@@ -424,7 +424,6 @@ class FirebaseManager() {
 
         try {
             val querySnapshot = db.collection("memes")
-                .limit(6)
                 .get()
                 .await()
 
@@ -515,58 +514,6 @@ class FirebaseManager() {
     }
 
 
-//    fun isJudge(roomId: String, callback: (Boolean) -> Unit) {
-//        val roomRef = db.collection("game_rooms").document(roomId)
-//
-//        roomRef.collection("players")
-//            .addSnapshotListener { snapshot, e ->
-//                if (e != null) {
-//                    Log.w("TAG", "Listen failed", e)
-//                    callback(false)
-//                    return@addSnapshotListener
-//                }
-//
-//                var isJudge = false
-//                if (snapshot != null) {
-//                    for (document in snapshot.documents) {
-//                        val role = document.getString("role")
-//                        if (role == "judge") {
-//                            isJudge = true
-//                            break
-//                        }
-//                    }
-//                }
-//                callback(isJudge)
-//            }
-//
-//    }
-
-//    fun addSelectedCard(card: String, playerName: String, roomId: String) {
-//        val roomRef = db.collection("game_rooms").document(roomId)
-//
-//        roomRef.collection("players")
-//            .whereEqualTo("playerName", playerName)
-//            .get()
-//            .addOnSuccessListener { playerSnapshot ->
-//                for (playerDocument in playerSnapshot.documents) {
-//                    val playerId = playerDocument.id
-//                    val playerRef = roomRef.collection("players").document(playerId)
-//
-//                    playerRef.update("selectedCard", card)
-//                        .addOnSuccessListener {
-//                            Log.d("TAG", "Selected card updated for player $playerName")
-//
-//                        }
-//                        .addOnFailureListener { e ->
-//                            Log.e("TAG", "Error updating card for player $playerName", e)
-//                        }
-//                }
-//            }
-//            .addOnFailureListener { e ->
-//                Log.e("TAG", "Error fetching player document for $playerName", e)
-//            }
-//
-//    }
 
     fun addSelectedCard(card: String, playerName: String, roomId: String) {
         val roomRef = db.collection("game_rooms").document(roomId)
